@@ -21,7 +21,7 @@
 - [x] Update `src/app/layout.tsx` — wrap with MUI ThemeProvider + CssBaseline (via `src/components/ThemeProviders.tsx` client boundary)
 
 ### Step 0.4: Create Base Types
-- [ ] Create `src/lib/types.ts` — all shared TypeScript interfaces:
+- [x] Create `src/lib/types.ts` — all shared TypeScript interfaces:
   - `AnalysisRequest`, `AnalysisResponse`
   - `ProviderConfig`, `AIProvider`
   - `EXIFData`, `AppSettings`
