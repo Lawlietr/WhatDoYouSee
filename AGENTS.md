@@ -11,9 +11,9 @@ Upload a photo → AI analyzes what private information can be inferred → resu
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 14+ (App Router) |
+| Framework | Next.js 16 (App Router) — see `node_modules/next/dist/docs/` before writing code |
 | Language | TypeScript |
-| Styling | Tailwind CSS + Material UI (MUI) |
+| Styling | Tailwind CSS v4 (CSS-first, no config file) + Material UI v9 |
 | AI (Browser) | `@huggingface/transformers` + WebGPU (ONNX format) |
 | AI (Backend) | llama-server via OpenAI-compatible API (GGUF format) |
 | EXIF | `exifr` |
@@ -84,10 +84,14 @@ interface AIProvider {
   name: string
   requiresApiKey: boolean
   supportsVision: boolean
-  analyze(request: AnalysisRequest): Promise<AnalysisResponse>
+  enabled: boolean
+  configSchema: ConfigField[]
+  analyze(request: AnalysisRequest, config: ProviderConfig): Promise<AnalysisResponse>
   testConnection(config: ProviderConfig): Promise<boolean>
 }
 ```
+
+Shared provider helpers: `src/lib/providers/system-prompt.ts` (privacy analysis prompt + `buildUserPrompt(exif)`) and `src/lib/providers/utils.ts` (`fileToDataURL`, `parseAnalysisJson`). The shared types (`AIProvider`, `AnalysisRequest`, `AppSettings`, …) live in `src/lib/types.ts`.
 
 ## System Prompt (Privacy Analysis)
 
@@ -109,7 +113,7 @@ You are an AI assistant that analyzes photos and infers what private information
 
 Guidelines:
 - Describe what a person looking at this photo could learn about the subject
-- Include inferences about: location, time,设备, activities, relationships, socioeconomic status, habits
+- Include inferences about: location, time, devices, activities, relationships, socioeconomic status, habits
 - Be specific but speculative — note when you are guessing vs. certain
 - Consider EXIF metadata if available (date, GPS, camera model)
 - Do NOT identify specific individuals by name
@@ -169,7 +173,7 @@ Guidelines:
 npm install
 
 # Development
-npm run dev        # http://localhost:3000
+npm run dev -- -p 3100   # port 3000 is occupied by a docker proxy on the dev machine
 
 # Production build
 npm run build
@@ -226,8 +230,8 @@ DEFAULT_BACKEND_MODEL=liquidai/lfm2.5-vl-3b-gguf
 
 ### Add a new AI Provider
 
-1. Create `src/lib/providers/{provider-id}.ts`
-2. Implement `AIProvider` interface
+1. Create `src/lib/providers/{provider-id}.ts` (reuse `system-prompt.ts` / `utils.ts` helpers)
+2. Implement `AIProvider` interface (set `enabled: true` when functional)
 3. Register in `src/lib/providers/registry.ts`
 4. Add config defaults in `src/lib/providers/defaults.ts`
 
