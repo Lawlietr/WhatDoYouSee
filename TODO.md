@@ -3,9 +3,9 @@
 ## Phase 0: Project Scaffolding
 
 ### Step 0.1: Initialize Next.js Project
-- [ ] Run `npx create-next-app@latest they-see-your-photo --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"`
-- [ ] Verify project runs with `npm run dev`
-- [ ] Clean up default page content (remove starter code from `page.tsx`)
+- [x] Run `npx create-next-app@latest they-see-your-photo --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"` (ran in temp dir then merged, since project dir already had docs + git)
+- [x] Verify project runs with `npm run dev`
+- [x] Clean up default page content (remove starter code from `page.tsx`)
 
 ### Step 0.2: Install Dependencies
 - [ ] UI framework: `npm install @mui/material @mui/icons-material @emotion/react @emotion/styled`
@@ -459,7 +459,7 @@ types.ts
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| Phase 0: Scaffolding | ⬜ Not started | |
+| Phase 0: Scaffolding | 🟨 In progress | Step 0.1 done (Next.js 16.3.4) |
 | Phase 1: Core Library | ⬜ Not started | |
 | Phase 2: API Routes | ⬜ Not started | |
 | Phase 3: React Components | ⬜ Not started | |
