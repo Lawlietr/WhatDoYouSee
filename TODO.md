@@ -479,8 +479,8 @@ types.ts
 | Phase 0: Scaffolding | ✅ Done | Next.js 16.3.4, MUI v9, Tailwind v4, static export verified |
 | Phase 1: Core Library | ✅ Done | EXIF, compress, llama-server + webgpu providers, 4 skeletons, settings, download mgr |
 | Phase 2: API Routes | ✅ Done | analyze + reverse-geocode, tested dev + prod; dual build mode (build vs build:export) |
-| Phase 3: React Components | ⬜ Not started | |
-| Phase 4: Settings UI | ✅ Done (4.1–4.7) | db882f3..HEAD |
+| Phase 3: React Components | ✅ Done (3.1–3.6) | db882f3; upload/examples/EXIF/results/map/loading |
+| Phase 4: Settings UI | ✅ Done (4.1–4.7) | ed31d8f; settings drawer, provider selector/config, connection test, WebGPU model mgmt + download progress |
 | Phase 5: Settings Hooks | ⬜ Not started | |
 | Phase 6: Main Page | ⬜ Not started | |
 | Phase 7: Testing | ⬜ Not started | |

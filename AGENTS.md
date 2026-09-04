@@ -19,15 +19,21 @@ Upload a photo → AI analyzes what private information can be inferred → resu
 | EXIF | `exifr` |
 | Image Compression | `browser-image-compression` |
 | Map | `react-leaflet` + OpenStreetMap |
-| Model Storage | IndexedDB (browser cache) |
+| Model Storage | Cache API (`transformers-cache`) for WebGPU ONNX files + IndexedDB (auxiliary) |
 | Settings | localStorage |
 
 ## AI Models
 
-| Mode | Model ID | Format | Size |
-|------|----------|--------|------|
-| WebGPU | `LiquidAI/LFM2.5-VL-3B-ONNX` | ONNX Q4 | ~1.7 GB |
-| Backend | `LiquidAI/LFM2.5-VL-3B-GGUF` | GGUF Q4_K_M | ~1.67 GB |
+WebGPU models are catalogued in `src/lib/model-catalog.ts` (`WEBGPU_MODELS`); sizes verified from the HF API (q4 ONNX shards + JSON config files).
+
+| Mode | Model ID | Format | Download Size |
+|------|----------|--------|---------------|
+| WebGPU (default) | `LiquidAI/LFM2.5-VL-3B-ONNX` | ONNX Q4 | ~2.76 GB |
+| WebGPU (optional) | `LiquidAI/LFM2.5-VL-1.6B-ONNX` | ONNX Q4 | ~1.42 GB |
+| WebGPU (optional) | `LiquidAI/LFM2.5-VL-450M-ONNX` | ONNX Q4 | ~0.52 GB |
+| Backend | `LiquidAI/LFM2.5-VL-3B-GGUF` | GGUF Q4_K_M | ~1.67 GB (user's llama-server) |
+
+**WebGPU download path** (`src/lib/model-cache.ts`): models are NOT prefetched via `from_pretrained` (transformers.js has no AbortSignal support there). Instead: HF tree API (`/api/models/{id}/tree/main?recursive=true`) lists files → filter `*_q4.onnx*` + `*.json` → each file is fetched with `AbortController` + streamed chunk-by-chunk (progress + speed per chunk) → stored in the Cache API under key `https://huggingface.co/{modelId}/resolve/main/{filename}` (transformers.js's default `env.cacheKey` cache name is `transformers-cache`) → then `from_pretrained` resolves instantly from the warm cache. Speed display is clamped to a 10 GB/s sanity cap.
 
 ## Architecture
 
@@ -149,7 +155,7 @@ These routes only exist in **self-hosted** builds. They are incompatible with st
 
 - React Context for global state (inference mode, active provider)
 - `localStorage` for settings persistence
-- `IndexedDB` for model file caching
+- Cache API for WebGPU model files (`src/lib/model-cache.ts`)
 
 ### UI Guidelines
 
@@ -232,6 +238,7 @@ No `.env` files. All runtime configuration lives in the browser:
 - User settings (inference mode, provider base URL, model) → localStorage via `src/lib/settings-manager.ts`
 - Built-in defaults → `src/lib/providers/defaults.ts` (llama-server `model` default is empty = auto-detect from the user's server `/v1/models`)
 - The llama-server Model field accepts any id the server routes on — a model preset name (from `--models-preset <file>.ini`), an `-hf` repo id, a `--alias`, or the loaded GGUF filename stem. `fetchAvailableModels()` in `src/lib/providers/llama-server.ts` lists them for the settings UI.
+- llama-server requests are capped via `AbortController` + `setTimeout` (not `AbortSignal.timeout`, for compatibility): 10 s for the `/v1/models` connection probe, 10 min for `/chat/completions` (vision inference can take minutes on modest hardware).
 - The only build-time env var is `NEXT_STATIC_EXPORT` (read by `next.config.ts` and `scripts/build-export.mjs`)
 ## Common Tasks
 
@@ -250,7 +257,8 @@ No `.env` files. All runtime configuration lives in the browser:
 ### Change default model
 
 1. Update `DEFAULT_WEBGPU_MODEL` or the llama-server entry in `src/lib/providers/defaults.ts`
-2. Update model list/placeholder in the corresponding provider file
+2. If the model is new, add it to `WEBGPU_MODELS` in `src/lib/model-catalog.ts` (id + verified sizeBytes) so the download dialog knows its size
+3. Update model list/placeholder in the corresponding provider file
 
 ### Deploy to Cloudflare Pages
 
