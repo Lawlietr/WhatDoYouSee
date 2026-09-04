@@ -28,16 +28,16 @@
   - `ModelInfo`, `DownloadProgress`
 
 ### Step 0.5: Configure for Static Export
-- [ ] Update `next.config.js`:
-  ```js
-  const nextConfig = {
-    output: 'export',         // Static export for Cloudflare Pages / HF Spaces
+- [x] Update `next.config.ts`:
+  ```ts
+  const nextConfig: NextConfig = {
+    output: "export",         // Static export for Cloudflare Pages / HF Spaces
     images: { unoptimized: true }  // Required for static export
   }
   ```
-- [ ] Verify `npm run build` produces `/out` directory
-- [ ] Verify `/out` can be served locally: `npx serve out`
-- [ ] Note: API routes (`src/app/api/`) will NOT work in static export mode
+- [x] Verify `npm run build` produces `/out` directory (includes 404.html for Cloudflare)
+- [x] Verify `/out` can be served locally (served + HTTP 200)
+- [x] Note: API routes (`src/app/api/`) will NOT work in static export mode
   - API mode: frontend fetches user's llama-server URL directly (no server proxy)
   - WebGPU mode: fully functional (runs in browser)
 
@@ -459,7 +459,7 @@ types.ts
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| Phase 0: Scaffolding | 🟨 In progress | Step 0.1 done (Next.js 16.3.4) |
+| Phase 0: Scaffolding | ✅ Done | Next.js 16.3.4, MUI v9, Tailwind v4, static export verified |
 | Phase 1: Core Library | ⬜ Not started | |
 | Phase 2: API Routes | ⬜ Not started | |
 | Phase 3: React Components | ⬜ Not started | |
