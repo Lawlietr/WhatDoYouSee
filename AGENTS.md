@@ -184,8 +184,8 @@ npm start
 # Production build — static export for Cloudflare/HF (excludes API routes)
 npm run build:export
 
-# Optional: start llama-server backend
-llama-server -hf LiquidAI/LFM2.5-VL-3B-GGUF:Q4_K_M --port 8080
+# Optional (local dev testing only) — the app connects to the user's OWN llama-server;
+# we never host or launch one. Vision requires the mmproj projector: llama-server -m <model>.gguf --mmproj <mmproj>.gguf --port 8080
 ```
 
 **Dual build mode:** `next.config.ts` reads `NEXT_STATIC_EXPORT=1` to toggle `output: 'export'`. The `build:export` script wraps `next build`, moving `src/app/api` out of the app tree first (it cannot be compiled into a static export) and restoring it afterwards. Both builds share the same source; only the output differs.
@@ -224,15 +224,13 @@ npm run build && npm start
 # Full API routes + llama-server integration
 ```
 
-## Environment Variables
+## Configuration
 
-```env
-# .env.local (optional, all have defaults)
-LLAMA_SERVER_URL=http://localhost:8080/v1
-DEFAULT_WEBGPU_MODEL=LiquidAI/LFM2.5-VL-3B-ONNX
-DEFAULT_BACKEND_MODEL=liquidai/lfm2.5-vl-3b-gguf
-```
-
+No `.env` files. All runtime configuration lives in the browser:
+- User settings (inference mode, provider base URL, model) → localStorage via `src/lib/settings-manager.ts`
+- Built-in defaults → `src/lib/providers/defaults.ts` (llama-server `model` default is empty = auto-detect from the user's server `/v1/models`)
+- The llama-server Model field accepts any id the server routes on — a model preset name (from `--models-preset <file>.ini`), an `-hf` repo id, a `--alias`, or the loaded GGUF filename stem. `fetchAvailableModels()` in `src/lib/providers/llama-server.ts` lists them for the settings UI.
+- The only build-time env var is `NEXT_STATIC_EXPORT` (read by `next.config.ts` and `scripts/build-export.mjs`)
 ## Common Tasks
 
 ### Add a new AI Provider
@@ -249,8 +247,8 @@ DEFAULT_BACKEND_MODEL=liquidai/lfm2.5-vl-3b-gguf
 
 ### Change default model
 
-1. Update `DEFAULT_WEBGPU_MODEL` or `DEFAULT_BACKEND_MODEL` in `.env.local`
-2. Update model list in the corresponding provider file
+1. Update `DEFAULT_WEBGPU_MODEL` or the llama-server entry in `src/lib/providers/defaults.ts`
+2. Update model list/placeholder in the corresponding provider file
 
 ### Deploy to Cloudflare Pages
 

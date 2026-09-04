@@ -202,6 +202,7 @@ Next.js 16 static export (`output: 'export'`) **cannot compile** route handlers 
 - [ ] Create `src/components/settings/ProviderConfigForm.tsx`
 - [ ] Dynamically render form fields based on `configSchema`
 - [ ] Always show: Base URL, Model
+- [ ] llama-server Model field: free text (model preset name / `-hf` repo id / `--alias` / GGUF filename stem) with an auto-detect dropdown populated from `fetchAvailableModels()` (server `/v1/models`) — preset routing mode means users MUST be able to type the name manually, not just pick
 - [ ] Conditionally show: API Key (with visibility toggle eye icon)
 - [ ] Validate URL format
 - [ ] Mask API key input

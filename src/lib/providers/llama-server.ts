@@ -53,6 +53,19 @@ async function safeBody(response: Response): Promise<string> {
   }
 }
 
+export async function fetchAvailableModels(
+  baseUrl: string = DEFAULT_BASE_URL
+): Promise<string[]> {
+  const response = await fetch(`${baseUrl.replace(/\/$/, "")}/models`, {
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok) {
+    throw new Error(`llama-server responded ${response.status}: ${await safeBody(response)}`);
+  }
+  const data = (await response.json()) as { data?: Array<{ id: string }> };
+  return (data.data ?? []).map((m) => m.id);
+}
+
 export const llamaServerProvider: AIProvider = {
   id: "llama-server",
   name: "llama-server (local)",
@@ -72,16 +85,24 @@ export const llamaServerProvider: AIProvider = {
       label: "Model",
       type: "text",
       required: false,
-      placeholder: "auto (first loaded model)",
+      placeholder: "preset name or model id from /v1/models (blank = auto-detect)",
     },
   ],
 
   async analyze(request: AnalysisRequest, config: ProviderConfig): Promise<AnalysisResponse> {
     const baseUrl = config.baseUrl || DEFAULT_BASE_URL;
+    let model = config.model ?? "";
+    if (!model) {
+      const models = await fetchAvailableModels(baseUrl);
+      if (models.length === 0) {
+        throw new Error("No models loaded on the llama-server. Start it with -m/-hf or a models preset, or enter the model name in settings.");
+      }
+      model = models[0];
+    }
     const imageDataUrl = await fileToDataURL(request.file);
     const content = await chatCompletion(
       baseUrl,
-      config.model || "",
+      model,
       buildUserPrompt(request.exif),
       imageDataUrl
     );
