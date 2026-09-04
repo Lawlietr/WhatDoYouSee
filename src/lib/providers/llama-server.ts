@@ -4,6 +4,23 @@ import { fileToDataURL, parseAnalysisJson } from "./utils";
 
 const DEFAULT_BASE_URL = "http://localhost:8080/v1";
 
+const CONNECT_TIMEOUT_MS = 10000;
+const INFER_TIMEOUT_MS = 10 * 60 * 1000;
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit = {},
+  timeoutMs: number = CONNECT_TIMEOUT_MS
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function chatCompletion(
   baseUrl: string,
   model: string,
@@ -11,7 +28,7 @@ async function chatCompletion(
   imageDataUrl: string
 ): Promise<string> {
   const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -29,7 +46,7 @@ async function chatCompletion(
       max_tokens: 2048,
       temperature: 0.3,
     }),
-  });
+  }, INFER_TIMEOUT_MS);
 
   if (!response.ok) {
     throw new Error(
@@ -56,9 +73,7 @@ async function safeBody(response: Response): Promise<string> {
 export async function fetchAvailableModels(
   baseUrl: string = DEFAULT_BASE_URL
 ): Promise<string[]> {
-  const response = await fetch(`${baseUrl.replace(/\/$/, "")}/models`, {
-    signal: AbortSignal.timeout(10000),
-  });
+  const response = await fetchWithTimeout(`${baseUrl.replace(/\/$/, "")}/models`);
   if (!response.ok) {
     throw new Error(`llama-server responded ${response.status}: ${await safeBody(response)}`);
   }
@@ -112,9 +127,7 @@ export const llamaServerProvider: AIProvider = {
   async testConnection(config: ProviderConfig): Promise<boolean> {
     const baseUrl = config.baseUrl || DEFAULT_BASE_URL;
     try {
-      const response = await fetch(`${baseUrl.replace(/\/$/, "")}/models`, {
-        signal: AbortSignal.timeout(10000),
-      });
+      const response = await fetchWithTimeout(`${baseUrl.replace(/\/$/, "")}/models`);
       return response.ok;
     } catch {
       return false;
