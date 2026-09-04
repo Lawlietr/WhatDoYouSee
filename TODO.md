@@ -46,56 +46,58 @@
 ## Phase 1: Core Library (No React)
 
 ### Step 1.1: EXIF Parser
-- [ ] Create `src/lib/exif.ts`
-- [ ] Export `parseEXIF(file: File): Promise<EXIFData>`
-- [ ] Extract: `CreateDate`, `latitude`, `longitude`, `Make`, `Model`
-- [ ] Handle missing gracefully (return partial data, no errors)
+- [x] Create `src/lib/exif.ts`
+- [x] Export `parseEXIF(file: File): Promise<EXIFData>`
+- [x] Extract: `CreateDate`, `latitude`, `longitude`, `Make`, `Model`
+- [x] Handle missing gracefully (return partial data, no errors) — try/catch returns `{}`
 
 ### Step 1.2: Image Compressor
-- [ ] Create `src/lib/compress.ts`
-- [ ] Export `compressImage(file: File): Promise<File>`
-- [ ] Config: `maxSizeMB: 0.5`, `maxWidthOrHeight: 3000`, `initialQuality: 0.8`
-- [ ] Handle HEIF conversion (if browser supports it)
+- [x] Create `src/lib/compress.ts`
+- [x] Export `compressImage(file: File): Promise<File>`
+- [x] Config: `maxSizeMB: 0.5`, `maxWidthOrHeight: 3000`, `initialQuality: 0.8`
+- [x] Skips compression when already under limit; falls back to original on error (HEIF handled via canvas if supported)
 
 ### Step 1.3: Provider Interface + llama-server Implementation
-- [ ] Create `src/lib/providers/types.ts` — `AIProvider` interface
-- [ ] Create `src/lib/providers/llama-server.ts`:
+- [x] `AIProvider` interface lives in `src/lib/types.ts` (created in Step 0.4) rather than a separate `providers/types.ts` — kept central to match dependency graph
+- [x] Create `src/lib/providers/llama-server.ts`:
   - `analyze()` — POST to `{baseUrl}/chat/completions` with image + prompt
   - `testConnection()` — GET `{baseUrl}/models`
-  - System prompt for privacy analysis (see AGENTS.md → System Prompt section)
-  - Parse JSON response → `{ paras, table }`
-- [ ] Create `src/lib/providers/registry.ts` — provider lookup + active provider
-- [ ] Create `src/lib/providers/defaults.ts` — default configs per provider
+  - System prompt for privacy analysis (see AGENTS.md → System Prompt section) → `system-prompt.ts`
+  - Parse JSON response → `{ paras, table }` → `utils.ts` (`parseAnalysisJson`)
+- [x] Create `src/lib/providers/registry.ts` — provider lookup + active provider
+- [x] Create `src/lib/providers/defaults.ts` — default configs per provider
+- [x] Added `src/lib/providers/utils.ts` (fileToDataURL + parseAnalysisJson) shared by providers
 
 ### Step 1.4: Placeholder Providers (Skeleton)
-- [ ] Create `src/lib/providers/openai.ts` — skeleton with TODO comments
-- [ ] Create `src/lib/providers/claude.ts` — skeleton with TODO comments
-- [ ] Create `src/lib/providers/grok.ts` — skeleton with TODO comments
-- [ ] Create `src/lib/providers/openrouter.ts` — skeleton with TODO comments
-- [ ] Register all in `registry.ts` with `enabled: false` flag
+- [x] Create `src/lib/providers/openai.ts` — skeleton with TODO comments
+- [x] Create `src/lib/providers/claude.ts` — skeleton with TODO comments
+- [x] Create `src/lib/providers/grok.ts` — skeleton with TODO comments
+- [x] Create `src/lib/providers/openrouter.ts` — skeleton with TODO comments
+- [x] Register all in `registry.ts` with `enabled: false` flag (throw "not implemented" on use)
 
 ### Step 1.5: Settings Manager
-- [ ] Create `src/lib/settings-manager.ts`
-- [ ] `loadSettings(): AppSettings` — from localStorage
-- [ ] `saveSettings(settings: AppSettings): void` — to localStorage
-- [ ] `getProviderConfig(id: string): ProviderConfig | null`
-- [ ] Default settings: WebGPU mode, llama-server provider, English
+- [x] Create `src/lib/settings-manager.ts`
+- [x] `loadSettings(): AppSettings` — from localStorage (SSR-safe, merges over defaults)
+- [x] `saveSettings(settings: AppSettings): void` — to localStorage
+- [x] `getProviderConfig(id: string): ProviderConfig | null` (+ setProviderConfig)
+- [x] Default settings: WebGPU mode, llama-server provider, English
 
 ### Step 1.6: WebGPU Inference Engine
-- [ ] Create `src/lib/providers/webgpu.ts`
-- [ ] Check WebGPU availability: `navigator.gpu`
-- [ ] Load model: `AutoModelForImageTextToText.from_pretrained(MODEL_ID, { device: 'webgpu', dtype: {...} })`
-- [ ] Process image + prompt → return analysis
-- [ ] Handle model not loaded (throw clear error)
+- [x] Create `src/lib/providers/webgpu.ts` (lazy-loads @huggingface/transformers)
+- [x] Check WebGPU availability: `navigator.gpu` (`isWebGpuSupported()`)
+- [x] Load model: `AutoModelForImageTextToText.from_pretrained(MODEL_ID, { device: 'webgpu', dtype: 'q4' })`
+- [x] Process image + prompt → return analysis (singleton pipeline, cached Promise)
+- [x] Handle model not loaded / unsupported (throw clear error)
+- [ ] ⚠ VERIFY at Phase 7.1: exact LFM2.5-VL input schema (`pixel_values`/`images` + chat template) needs a real WebGPU browser + downloaded model to confirm
 
 ### Step 1.7: Model Download Manager
-- [ ] Create `src/lib/download-manager.ts`
-- [ ] IndexedDB storage for model files
-- [ ] `hasModel(modelId): Promise<boolean>`
-- [ ] `downloadModel(modelId, url, onProgress, signal): Promise<ArrayBuffer>`
-- [ ] `deleteModel(modelId): Promise<void>`
-- [ ] Support `AbortController` for cancellation
-- [ ] Progress tracking: bytes downloaded, total size, speed
+- [x] Create `src/lib/download-manager.ts` (idb wrapper)
+- [x] IndexedDB storage for model files
+- [x] `hasModel(modelId): Promise<boolean>`
+- [x] `downloadModel(modelId, url, onProgress, signal)` — streams via ReadableStream, returns ArrayBuffer
+- [x] `deleteModel(modelId): Promise<void>` (+ clearModelCache, getModelBytes, cachedModelBytes)
+- [x] Support `AbortController` for cancellation
+- [x] Progress tracking: bytes downloaded, total size (speed/ETA computed in hook layer)
 
 ---
 
@@ -460,7 +462,7 @@ types.ts
 | Phase | Status | Notes |
 |-------|--------|-------|
 | Phase 0: Scaffolding | ✅ Done | Next.js 16.3.4, MUI v9, Tailwind v4, static export verified |
-| Phase 1: Core Library | ⬜ Not started | |
+| Phase 1: Core Library | ✅ Done | EXIF, compress, llama-server + webgpu providers, 4 skeletons, settings, download mgr |
 | Phase 2: API Routes | ⬜ Not started | |
 | Phase 3: React Components | ⬜ Not started | |
 | Phase 4: Settings UI | ⬜ Not started | |
