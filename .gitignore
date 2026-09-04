@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# temp dir used by build:export (auto-removed)
+/api-export-stash
+/.api-export-stash

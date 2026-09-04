@@ -143,6 +143,8 @@ Guidelines:
 - `POST /api/analyze` — Unified photo analysis entry point (routes to active provider)
 - `GET /api/reverse-geocode` — Coordinates → address via Nominatim
 
+These routes only exist in **self-hosted** builds. They are incompatible with static export (`output: 'export'`) because they read the `Request`; `npm run build:export` temporarily moves `src/app/api` out of the tree during the build (see Build & Run).
+
 ### State Management
 
 - React Context for global state (inference mode, active provider)
@@ -175,13 +177,18 @@ npm install
 # Development
 npm run dev -- -p 3100   # port 3000 is occupied by a docker proxy on the dev machine
 
-# Production build
+# Production build — self-hosted (keeps API routes, run with `next start`)
 npm run build
 npm start
+
+# Production build — static export for Cloudflare/HF (excludes API routes)
+npm run build:export
 
 # Optional: start llama-server backend
 llama-server -hf LiquidAI/LFM2.5-VL-3B-GGUF:Q4_K_M --port 8080
 ```
+
+**Dual build mode:** `next.config.ts` reads `NEXT_STATIC_EXPORT=1` to toggle `output: 'export'`. The `build:export` script wraps `next build`, moving `src/app/api` out of the app tree first (it cannot be compiled into a static export) and restoring it afterwards. Both builds share the same source; only the output differs.
 
 ## Deployment
 
@@ -192,7 +199,7 @@ npm run dev        # Full functionality with API routes
 
 ### Cloudflare Pages (Recommended for Public Demo)
 ```bash
-npm run build      # Static export to /out
+npm run build:export    # Static export to /out (API routes auto-excluded)
 npx wrangler pages deploy ./out --project-name=they-see-your-photo
 # Live at: https://they-see-your-photo.pages.dev
 ```
@@ -203,7 +210,7 @@ npx wrangler pages deploy ./out --project-name=they-see-your-photo
 
 ### Hugging Face Static Spaces
 ```bash
-npm run build
+npm run build:export    # Static export to /out
 # Upload /out contents to HF Static Space repo
 ```
 - Free: unlimited

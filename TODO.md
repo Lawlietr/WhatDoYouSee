@@ -104,8 +104,8 @@
 ## Phase 2: Backend API Routes
 
 ### Step 2.1: Unified Analysis Endpoint
-- [ ] Create `src/app/api/analyze/route.ts`
-- [ ] Accept `POST` with multipart/form-data:
+- [x] Create `src/app/api/analyze/route.ts`
+- [x] Accept `POST` with multipart/form-data:
   - `file` (Blob)
   - `filename` (string)
   - `created` (optional string)
@@ -115,16 +115,27 @@
   - `language` (string)
   - `provider` (string — which AI provider to use)
   - `providerConfig` (JSON string — provider settings)
-- [ ] Route to correct provider's `analyze()` method
-- [ ] Return `{ success, data, error, provider, model, latency }`
-- [ ] Error handling: connection refused, timeout, invalid response
+- [x] Route to correct provider's `analyze()` method
+- [x] Return `{ success, data, error, provider, model, latency }`
+- [x] Error handling: connection refused (502), unknown provider (400), not-implemented (501), webgpu-via-API rejected (400)
+- [x] CORS headers for cross-origin llama-server calls
 
 ### Step 2.2: Reverse Geocode Endpoint
-- [ ] Create `src/app/api/reverse-geocode/route.ts`
-- [ ] Accept `GET` with query params: `lat`, `lon`
-- [ ] Call Nominatim API: `https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}`
-- [ ] Return `{ address, country, city }`
-- [ ] Cache results in memory (avoid repeated calls for same coords)
+- [x] Create `src/app/api/reverse-geocode/route.ts`
+- [x] Accept `GET` with query params: `lat`, `lon`
+- [x] Call Nominatim API (uses `format=jsonv2`, the current format; `json` is deprecated)
+- [x] Return `{ address, country, city }`
+- [x] Cache results in memory (verified: 1.3s → 0.012s on repeat)
+- [x] Validates lat/lon range; 400 on missing/out-of-range
+
+### ⚠ Build-mode note (discovered in Phase 2)
+
+Next.js 16 static export (`output: 'export'`) **cannot compile** route handlers that read the `Request` (both `POST /api/analyze` and `GET /api/reverse-geocode` fail the export build). Since the static Cloudflare/HF deployment doesn't need these routes (WebGPU runs in-browser; API mode calls the user's own llama-server directly), the build is split into two modes:
+
+- `npm run build` → self-hosted, keeps API routes (dynamic, served by `next start`)
+- `npm run build:export` → runs `scripts/build-export.mjs`, which temporarily moves `src/app/api` out of the app tree, builds with `NEXT_STATIC_EXPORT=1`, then restores it (try/finally). Produces `/out` for Cloudflare/HF.
+
+`next.config.ts` reads `NEXT_STATIC_EXPORT=1` to toggle `output: 'export'`.
 
 ---
 
@@ -350,10 +361,11 @@ usePhotoAnalysis
 ## Phase 8: Deployment
 
 ### Step 8.1: Static Export Build
-- [ ] Verify `next.config.js` has `output: 'export'` and `images: { unoptimized: true }`
-- [ ] Run `npm run build` → confirm `/out` directory generated
-- [ ] Verify `/out` contains: `index.html`, `_next/static/`, `examples/`
+- [ ] `next.config.ts` toggles `output: 'export'` via `NEXT_STATIC_EXPORT=1`; `images.unoptimized: true` always set
+- [ ] Run `npm run build:export` → confirm `/out` directory generated (API routes auto-excluded + restored)
+- [ ] Verify `/out` contains: `index.html`, `_next/static/`, `404.html`, `examples/`
 - [ ] Local test: `npx serve out` → verify all features work
+- [ ] Note: self-hosted (with API routes) uses `npm run build && npm start`, NOT `build:export`
 
 ### Step 8.2: Cloudflare Pages (Recommended)
 - [ ] Install wrangler: `npm install -g wrangler`
@@ -369,7 +381,7 @@ usePhotoAnalysis
 - [ ] Verify: `https://huggingface.co/spaces/{username}/they-see-your-photo`
 
 ### Step 8.4: Self-Hosted (Full Functionality)
-- [ ] `npm run build && npm start` (includes API routes)
+- [ ] `npm run build && npm start` (includes API routes; do NOT use `build:export` here)
 - [ ] Or Docker: create `Dockerfile` + `docker-compose.yml`
 - [ ] Start llama-server backend: `llama-server -hf LiquidAI/LFM2.5-VL-3B-GGUF:Q4_K_M --port 8080`
 - [ ] Verify both WebGPU and API modes work
@@ -463,7 +475,7 @@ types.ts
 |-------|--------|-------|
 | Phase 0: Scaffolding | ✅ Done | Next.js 16.3.4, MUI v9, Tailwind v4, static export verified |
 | Phase 1: Core Library | ✅ Done | EXIF, compress, llama-server + webgpu providers, 4 skeletons, settings, download mgr |
-| Phase 2: API Routes | ⬜ Not started | |
+| Phase 2: API Routes | ✅ Done | analyze + reverse-geocode, tested dev + prod; dual build mode (build vs build:export) |
 | Phase 3: React Components | ⬜ Not started | |
 | Phase 4: Settings UI | ⬜ Not started | |
 | Phase 5: Settings Hooks | ⬜ Not started | |

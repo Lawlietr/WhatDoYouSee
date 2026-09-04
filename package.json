@@ -1,12 +1,13 @@
 {
-  "name": "tsyph-tmp",
+  "name": "they-see-your-photo",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "build:export": "node scripts/build-export.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

@@ -1,12 +1,17 @@
 import type { AnalysisResponse } from "../types";
 
-export function fileToDataURL(file: File | Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
+export async function fileToDataURL(file: File | Blob): Promise<string> {
+  const mime = file.type || "application/octet-stream";
+  if (typeof FileReader !== "undefined") {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+  const buffer = Buffer.from(await file.arrayBuffer());
+  return `data:${mime};base64,${buffer.toString("base64")}`;
 }
 
 export function parseAnalysisJson(text: string): AnalysisResponse {
