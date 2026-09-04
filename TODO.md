@@ -8,12 +8,12 @@
 - [x] Clean up default page content (remove starter code from `page.tsx`)
 
 ### Step 0.2: Install Dependencies
-- [ ] UI framework: `npm install @mui/material @mui/icons-material @emotion/react @emotion/styled`
-- [ ] AI (browser): `npm install @huggingface/transformers`
-- [ ] EXIF: `npm install exifr`
-- [ ] Image compression: `npm install browser-image-compression`
-- [ ] Map: `npm install react-leaflet leaflet` + `npm install -D @types/leaflet`
-- [ ] Utilities: `npm install idb` (IndexedDB wrapper for model caching)
+- [x] UI framework: `npm install @mui/material @mui/icons-material @emotion/react @emotion/styled` (MUI v9)
+- [x] AI (browser): `npm install @huggingface/transformers`
+- [x] EXIF: `npm install exifr`
+- [x] Image compression: `npm install browser-image-compression`
+- [x] Map: `npm install react-leaflet leaflet` + `npm install -D @types/leaflet` (react-leaflet v5, requires React 19 ✓)
+- [x] Utilities: `npm install idb` (IndexedDB wrapper for model caching)
 
 ### Step 0.3: Configure Tailwind + MUI
 - [ ] Update `tailwind.config.js` — add MUI compatibility
