@@ -190,6 +190,8 @@ npm run build:export
 
 **Dual build mode:** `next.config.ts` reads `NEXT_STATIC_EXPORT=1` to toggle `output: 'export'`. The `build:export` script wraps `next build`, moving `src/app/api` out of the app tree first (it cannot be compiled into a static export) and restoring it afterwards. Both builds share the same source; only the output differs.
 
+**Pitfall:** `build:export` deletes `.next/dev` before building — stale dev-server type validators (`.next/dev/types/validator.ts`) reference the API routes and fail type-check once the routes are moved.
+
 ## Deployment
 
 ### Local Development

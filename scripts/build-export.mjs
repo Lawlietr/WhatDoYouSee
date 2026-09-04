@@ -9,6 +9,8 @@ const apiDir = path.join(root, "src/app/api");
 const hiddenDir = path.join(root, ".api-export-stash");
 const nextBin = path.join(root, "node_modules", "next", "dist", "bin", "next");
 
+fs.rmSync(path.join(root, ".next", "dev"), { recursive: true, force: true });
+
 const hasApi = fs.existsSync(apiDir);
 if (hasApi) {
   fs.renameSync(apiDir, hiddenDir);
