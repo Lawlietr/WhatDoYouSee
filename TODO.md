@@ -16,9 +16,9 @@
 - [x] Utilities: `npm install idb` (IndexedDB wrapper for model caching)
 
 ### Step 0.3: Configure Tailwind + MUI
-- [ ] Update `tailwind.config.js` — add MUI compatibility
-- [ ] Create `src/styles/theme.ts` — MUI dark theme config
-- [ ] Update `src/app/layout.tsx` — wrap with MUI ThemeProvider + CssBaseline
+- [x] Tailwind v4 (CSS-first, no `tailwind.config.js` needed) — verified MUI v9 coexists without extra config
+- [x] Create `src/styles/theme.ts` — MUI dark theme config
+- [x] Update `src/app/layout.tsx` — wrap with MUI ThemeProvider + CssBaseline (via `src/components/ThemeProviders.tsx` client boundary)
 
 ### Step 0.4: Create Base Types
 - [ ] Create `src/lib/types.ts` — all shared TypeScript interfaces:
