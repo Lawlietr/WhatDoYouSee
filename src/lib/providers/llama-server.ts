@@ -110,7 +110,7 @@ export const llamaServerProvider: AIProvider = {
       label: "Server",
       type: "text",
       required: true,
-      placeholder: "http://<your-llama-server-host>:1134",
+      placeholder: "http://<your-llama-server-host>:8080",
       helperText: "host:port of your llama-server — the /v1 prefix is added automatically",
     },
     {
