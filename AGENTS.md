@@ -239,6 +239,7 @@ No `.env` files. All runtime configuration lives in the browser:
 - Built-in defaults → `src/lib/providers/defaults.ts` (llama-server `model` default is empty = auto-detect from the user's server `/v1/models`)
 - The llama-server Model field accepts any id the server routes on — a model preset name (from `--models-preset <file>.ini`), an `-hf` repo id, a `--alias`, or the loaded GGUF filename stem. `fetchAvailableModels()` in `src/lib/providers/llama-server.ts` lists them for the settings UI.
 - llama-server requests are capped via `AbortController` + `setTimeout` (not `AbortSignal.timeout`, for compatibility): 10 s for the `/v1/models` connection probe, 10 min for `/chat/completions` (vision inference can take minutes on modest hardware).
+- If the llama-server was started with `--api-key`, the settings UI has an optional API Key field for llama-server; it is sent as `Authorization: Bearer <key>` on `/v1/models` and `/v1/chat/completions`. Stored in localStorage only.
 - The only build-time env var is `NEXT_STATIC_EXPORT` (read by `next.config.ts` and `scripts/build-export.mjs`)
 ## Common Tasks
 

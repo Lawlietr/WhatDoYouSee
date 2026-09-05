@@ -21,16 +21,21 @@ async function fetchWithTimeout(
   }
 }
 
+function authHeaders(apiKey?: string): Record<string, string> {
+  return apiKey ? { Authorization: `Bearer ${apiKey}` } : {};
+}
+
 async function chatCompletion(
   baseUrl: string,
   model: string,
   userPrompt: string,
-  imageDataUrl: string
+  imageDataUrl: string,
+  apiKey?: string
 ): Promise<string> {
   const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
   const response = await fetchWithTimeout(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders(apiKey) },
     body: JSON.stringify({
       model,
       messages: [
@@ -71,9 +76,13 @@ async function safeBody(response: Response): Promise<string> {
 }
 
 export async function fetchAvailableModels(
-  baseUrl: string = DEFAULT_BASE_URL
+  baseUrl: string = DEFAULT_BASE_URL,
+  apiKey?: string
 ): Promise<string[]> {
-  const response = await fetchWithTimeout(`${baseUrl.replace(/\/$/, "")}/models`);
+  const response = await fetchWithTimeout(
+    `${baseUrl.replace(/\/$/, "")}/models`,
+    { headers: authHeaders(apiKey) }
+  );
   if (!response.ok) {
     throw new Error(`llama-server responded ${response.status}: ${await safeBody(response)}`);
   }
@@ -102,13 +111,20 @@ export const llamaServerProvider: AIProvider = {
       required: false,
       placeholder: "preset name or model id from /v1/models (blank = auto-detect)",
     },
+    {
+      key: "apiKey",
+      label: "API Key",
+      type: "password",
+      required: false,
+      placeholder: "only if llama-server was started with --api-key",
+    },
   ],
 
   async analyze(request: AnalysisRequest, config: ProviderConfig): Promise<AnalysisResponse> {
     const baseUrl = config.baseUrl || DEFAULT_BASE_URL;
     let model = config.model ?? "";
     if (!model) {
-      const models = await fetchAvailableModels(baseUrl);
+      const models = await fetchAvailableModels(baseUrl, config.apiKey);
       if (models.length === 0) {
         throw new Error("No models loaded on the llama-server. Start it with -m/-hf or a models preset, or enter the model name in settings.");
       }
@@ -119,7 +135,8 @@ export const llamaServerProvider: AIProvider = {
       baseUrl,
       model,
       buildUserPrompt(request.exif),
-      imageDataUrl
+      imageDataUrl,
+      config.apiKey
     );
     return parseAnalysisJson(content);
   },
@@ -127,7 +144,10 @@ export const llamaServerProvider: AIProvider = {
   async testConnection(config: ProviderConfig): Promise<boolean> {
     const baseUrl = config.baseUrl || DEFAULT_BASE_URL;
     try {
-      const response = await fetchWithTimeout(`${baseUrl.replace(/\/$/, "")}/models`);
+      const response = await fetchWithTimeout(
+        `${baseUrl.replace(/\/$/, "")}/models`,
+        { headers: authHeaders(config.apiKey) }
+      );
       return response.ok;
     } catch {
       return false;

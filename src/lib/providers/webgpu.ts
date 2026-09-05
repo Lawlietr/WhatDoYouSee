@@ -5,7 +5,7 @@ import { DEFAULT_WEBGPU_MODEL } from "./defaults";
 
 type RawImageType = import("@huggingface/transformers").RawImage;
 
-let pipelinePromise: Promise<WebGPUState> | null = null;
+const pipelineCache = new Map<string, Promise<WebGPUState>>();
 
 interface WebGPUState {
   run(images: RawImageType[], prompt: string): Promise<string>;
@@ -21,19 +21,20 @@ async function getDevice(): Promise<GPUAdapter | null> {
   return gpu ? gpu.requestAdapter() : null;
 }
 
-async function loadPipeline(): Promise<WebGPUState> {
-  if (pipelinePromise) return pipelinePromise;
-  pipelinePromise = (async () => {
+async function loadPipeline(modelId: string): Promise<WebGPUState> {
+  const cached = pipelineCache.get(modelId);
+  if (cached) return cached;
+  const promise = (async () => {
     const { AutoModelForImageTextToText, AutoTokenizer, env } = await import(
       "@huggingface/transformers"
     );
     env.allowLocalModels = false;
 
-    const model = await AutoModelForImageTextToText.from_pretrained(DEFAULT_WEBGPU_MODEL, {
+    const model = await AutoModelForImageTextToText.from_pretrained(modelId, {
       device: "webgpu",
       dtype: "q4",
     });
-    const tokenizer = await AutoTokenizer.from_pretrained(DEFAULT_WEBGPU_MODEL);
+    const tokenizer = await AutoTokenizer.from_pretrained(modelId);
 
     return {
       async run(images: RawImageType[], prompt: string): Promise<string> {
@@ -54,7 +55,9 @@ async function loadPipeline(): Promise<WebGPUState> {
       },
     };
   })();
-  return pipelinePromise;
+  pipelineCache.set(modelId, promise);
+  promise.catch(() => pipelineCache.delete(modelId));
+  return promise;
 }
 
 async function loadRawImage(url: string): Promise<RawImageType> {
@@ -73,13 +76,14 @@ export const webgpuProvider: AIProvider = {
     { key: "model", label: "Model", type: "text", required: false, placeholder: DEFAULT_WEBGPU_MODEL },
   ],
 
-  async analyze(request: AnalysisRequest, _config: ProviderConfig): Promise<AnalysisResponse> {
+  async analyze(request: AnalysisRequest, config: ProviderConfig): Promise<AnalysisResponse> {
     if (!isBrowser() || !(await getDevice())) {
       throw new Error("WebGPU is not supported in this browser");
     }
+    const modelId = config.model || DEFAULT_WEBGPU_MODEL;
     const url = URL.createObjectURL(request.file);
     try {
-      const [rawImage, pipeline] = await Promise.all([loadRawImage(url), loadPipeline()]);
+      const [rawImage, pipeline] = await Promise.all([loadRawImage(url), loadPipeline(modelId)]);
       const text = await pipeline.run([rawImage], buildUserPrompt(request.exif));
       return parseAnalysisJson(text);
     } finally {

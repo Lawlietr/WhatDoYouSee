@@ -243,33 +243,34 @@ Next.js 16 static export (`output: 'export'`) **cannot compile** route handlers 
 ## Phase 5: Settings Hooks
 
 ### Step 5.1: useSettings Hook
-- [ ] Create `src/hooks/useSettings.ts`
-- [ ] Wrap settings-manager with React Context
-- [ ] Provide `settings`, `updateSettings`, `resetSettings`
-- [ ] Persist to localStorage on every change
+- [x] Create `src/hooks/useSettings.tsx`
+- [x] Wrap settings-manager with React Context
+- [x] Provide `settings`, `updateSettings`, `resetSettings` (+ `setProviderConfigValue`)
+- [x] Persist to localStorage on every change (effect on settings)
 
 ### Step 5.2: useProvider Hook
-- [ ] Create `src/hooks/useProvider.ts`
-- [ ] Return current active provider instance
-- [ ] Re-derive when settings change
+- [x] Create `src/hooks/useProvider.ts`
+- [x] Return current active provider instance as `{ provider, config }` (webgpu → `webgpuModelId`; api → active provider + its stored config)
+- [x] Re-derive when settings change
 
 ### Step 5.3: useModelDownload Hook
-- [ ] Create `src/hooks/useModelDownload.ts`
-- [ ] State: `isDownloaded`, `isDownloading`, `progress`, `error`
-- [ ] Actions: `download()`, `cancel()`, `deleteModel()`
-- [ ] Auto-check on mount if model exists in cache
+- [x] Create `src/hooks/useModelDownload.ts`
+- [x] State: `isDownloaded`, `isDownloading`, `progress`, `error`
+- [x] Actions: `download()`, `cancel()`, `deleteModel()` (+ `refresh()`)
+- [x] Auto-check on mount if model exists in cache (Cache API via `cachedModelState`)
 
 ### Step 5.4: useWebGPU Hook
-- [ ] Create `src/hooks/useWebGPU.ts`
-- [ ] Detect WebGPU support: `navigator.gpu`
-- [ ] Return `{ supported: boolean, adapter: GPUAdapter | null }`
-- [ ] Show warning banner if not supported
+- [x] Create `src/hooks/useWebGPU.ts`
+- [x] Detect WebGPU support: `navigator.gpu`
+- [x] Return `{ supported, checking, adapter: GPUAdapter | null }`
 
 ### Step 5.5: usePhotoAnalysis Hook
-- [ ] Create `src/hooks/usePhotoAnalysis.ts`
-- [ ] Orchestrates: EXIF parse → compress → analyze (WebGPU or API)
-- [ ] State: `isAnalyzing`, `result`, `error`, `stage`
-- [ ] Stage tracking: "parsing EXIF" → "compressing" → "analyzing" → "done"
+- [x] Create `src/hooks/usePhotoAnalysis.ts`
+- [x] Orchestrates: EXIF parse → compress → analyze (WebGPU or API, via `useProvider`)
+- [x] State: `isAnalyzing`, `result`, `meta` (provider/model/latency), `error`, `stage`
+- [x] Stage tracking: "parsing-exif" → "compressing" → "analyzing" → "done"/"error"
+
+**Note:** `src/lib/providers/webgpu.ts` updated in this phase — pipeline cache is now per-model (`Map<modelId, Promise>`), and `analyze()` honors `config.model` (falls back to `DEFAULT_WEBGPU_MODEL`), so the model picked in settings actually takes effect.
 
 ---
 
@@ -326,6 +327,9 @@ usePhotoAnalysis
 
 ## Phase 7: Testing & Polish
 
+> **Local test llama-server** (user's LAN, for API-mode vision tests): `http://<llama-server-host:port>`, API key `<api-key>` (started with `--api-key`), model `<model-name>` (vision-capable; needs `--mmproj` projector). Note the machine may be powered off — verify reachability before testing. Browser page is served over HTTP so mixed-content is not an issue; the server needs `--cors-origins` for cross-origin requests from the app's origin.
+
+### Step 7.1: Functional Testing
 ### Step 7.1: Functional Testing
 - [ ] Test WebGPU mode with real photo
 - [ ] Test API mode with llama-server running
@@ -481,7 +485,7 @@ types.ts
 | Phase 2: API Routes | ✅ Done | analyze + reverse-geocode, tested dev + prod; dual build mode (build vs build:export) |
 | Phase 3: React Components | ✅ Done (3.1–3.6) | db882f3; upload/examples/EXIF/results/map/loading |
 | Phase 4: Settings UI | ✅ Done (4.1–4.7) | ed31d8f; settings drawer, provider selector/config, connection test, WebGPU model mgmt + download progress |
-| Phase 5: Settings Hooks | ⬜ Not started | |
+| Phase 5: Settings Hooks | ✅ Done (5.1–5.5) | useSettings/useProvider/useModelDownload/useWebGPU/usePhotoAnalysis; webgpu per-model pipelines; llama-server API-key support |
 | Phase 6: Main Page | ⬜ Not started | |
 | Phase 7: Testing | ⬜ Not started | |
 | Phase 8: Deployment | ⬜ Not started | |
