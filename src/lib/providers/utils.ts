@@ -23,7 +23,7 @@ export function parseAnalysisJson(text: string): AnalysisResponse {
   const start = cleaned.indexOf("{");
   const end = cleaned.lastIndexOf("}");
   if (start === -1 || end === -1 || end <= start) {
-    throw new Error("Model response is not valid JSON");
+    throw new Error(`Model response is not valid JSON (got: "${excerpt(cleaned)}")`);
   }
 
   const parsed = JSON.parse(cleaned.slice(start, end + 1)) as Record<string, unknown>;
@@ -42,8 +42,23 @@ export function parseAnalysisJson(text: string): AnalysisResponse {
       : {};
 
   if (paras.length === 0 && Object.keys(table).length === 0) {
-    throw new Error("Model response contained no analysis data");
+    throw new Error(`Model response contained no analysis data (got: "${excerpt(cleaned)}")`);
   }
 
   return { paras, table };
+}
+
+function excerpt(text: string, max = 300): string {
+  const t = text.replace(/\s+/g, " ").trim();
+  return t.length > max ? t.slice(0, max) + "…" : t;
+}
+
+export function parseAnalysisResilient(text: string): AnalysisResponse {
+  const cleaned = text.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+  const hasJson = cleaned.indexOf("{") !== -1 && cleaned.lastIndexOf("}") > cleaned.indexOf("{");
+  if (hasJson) return parseAnalysisJson(text);
+  if (cleaned.length >= 40) {
+    return { paras: [cleaned], table: {} };
+  }
+  return parseAnalysisJson(text);
 }

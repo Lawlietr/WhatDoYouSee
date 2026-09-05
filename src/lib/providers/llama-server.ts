@@ -1,6 +1,6 @@
 import type { AIProvider, AnalysisRequest, AnalysisResponse, ProviderConfig } from "../types";
 import { PRIVACY_ANALYSIS_SYSTEM_PROMPT, buildUserPrompt } from "./system-prompt";
-import { fileToDataURL, parseAnalysisJson } from "./utils";
+import { fileToDataURL, parseAnalysisResilient } from "./utils";
 
 const DEFAULT_BASE_URL = "http://localhost:8080/v1";
 
@@ -166,7 +166,7 @@ export const llamaServerProvider: AIProvider = {
       imageDataUrl,
       config.apiKey
     );
-    return parseAnalysisJson(content);
+    return parseAnalysisResilient(content);
   },
 
   async testConnection(config: ProviderConfig): Promise<boolean> {

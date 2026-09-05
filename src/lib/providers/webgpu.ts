@@ -7,7 +7,7 @@ import type {
   ProviderConfig,
 } from "../types";
 import { PRIVACY_ANALYSIS_SYSTEM_PROMPT, buildUserPrompt } from "./system-prompt";
-import { parseAnalysisJson } from "./utils";
+import { parseAnalysisResilient } from "./utils";
 import { getModelInfo } from "../model-catalog";
 import { DEFAULT_WEBGPU_MODEL } from "./defaults";
 import { isWebGpuSupported as checkGpu } from "./webgpu-support";
@@ -157,7 +157,7 @@ export const webgpuProvider: AIProvider = {
   ): Promise<AnalysisResponse> {
     const modelId = config.model ?? DEFAULT_WEBGPU_MODEL;
     const text = await run(modelId, request.file, request);
-    return parseAnalysisJson(text);
+    return parseAnalysisResilient(text);
   },
 
   async testConnection(_config: ProviderConfig): Promise<boolean> {
