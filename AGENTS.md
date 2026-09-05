@@ -98,11 +98,13 @@ interface AIProvider {
 }
 ```
 
-Shared provider helpers: `src/lib/providers/system-prompt.ts` (privacy analysis prompt + `buildUserPrompt(exif)`) and `src/lib/providers/utils.ts` (`fileToDataURL`, `parseAnalysisJson`). The shared types (`AIProvider`, `AnalysisRequest`, `AppSettings`, …) live in `src/lib/types.ts`.
+Shared provider helpers: `src/lib/providers/system-prompt.ts` (privacy analysis prompt + `buildUserPrompt(exif)`) and `src/lib/providers/utils.ts` (`fileToDataURL`, `parseAnalysisJson`, `parseAnalysisResilient`). The shared types (`AIProvider`, `AnalysisRequest`, `AppSettings`, …) live in `src/lib/types.ts`.
+
+**Resilient parsing:** both live providers (WebGPU, llama-server) call `parseAnalysisResilient`, not the strict `parseAnalysisJson`. Weak small models (verified: LFM2.5-VL-450M) follow the image-observation instruction but drop the JSON-only requirement and return prose — the resilient parser falls back to the raw text as a single paragraph (empty table renders as “No structured findings.” in `DataTableView`). Error messages from the strict parser include a 300-char excerpt of the model output for diagnosis. Full `{paras, table}` output requires a stronger model (LFM2.5-VL-3B or the user's Qwen3.5-9B-VL).
 
 ## System Prompt (Privacy Analysis)
 
-Used by both WebGPU and llama-server providers. To be refined during testing.
+Used by both WebGPU and llama-server providers. **Refinement planned (TODO.md Step 7.6, not yet implemented):** the original site reaches much deeper inferences — personal interests, estimated income, religion, brands of bags/clothing — while the current prompt only lists generic categories. Next iteration will enrich the guidelines and define a grouped table schema (Location / Time / Person / Socioeconomic / Devices / Brands / Relationships / Inferred Habits), then re-test against WebGPU 450M/3B and the user's Qwen3.5-9B-VL.
 
 ```
 You are an AI assistant that analyzes photos and infers what private information an observer could gather. Based on the image, provide your analysis in the following JSON format:
@@ -127,6 +129,14 @@ Guidelines:
 - Output ONLY the JSON, no extra text
 ```
 
+## Known Gaps (to be closed before launch)
+
+1. **Example photos are placeholders** — the 4 images in `public/examples/` are program-generated gradients (AI analysis of them is meaningless). Swap for up to 4 real photos from a free-license stock source (Unsplash/Pexels/Pixabay/Flickr CC), keeping attribution (TODO.md Step 7.5).
+2. **System prompt too shallow** — original site infers interests, income, religion, brands, etc. Prompt + table schema refinement is planned (TODO.md Step 7.6).
+3. **Reverse geocoding not wired** — `/api/reverse-geocode` exists but the UI never calls it; address display near the map is planned (TODO.md Step 7.7).
+4. **WebGPU 450M = prose only** — works (user-verified) but cannot produce the JSON table; 3B or the user's llama-server backend is needed for full structured output.
+5. **Deployment deferred** — local production (`npm run build && npm start`) must be verified first; Cloudflare Pages is best-effort afterwards and may be skipped (TODO.md Phase 8.0).
+
 ## Development Conventions
 
 ### Code Style
@@ -148,7 +158,7 @@ Guidelines:
 ### API Routes
 
 - `POST /api/analyze` — Unified photo analysis entry point (routes to active provider)
-- `GET /api/reverse-geocode` — Coordinates → address via Nominatim
+- `GET /api/reverse-geocode` — Coordinates → address via Nominatim. **Currently not wired to the UI** (map shows a marker only, no address). Plan (TODO.md Step 7.7): display the resolved address with the map — via this proxy in self-hosted builds, or by calling Nominatim directly from the browser in static exports (user-initiated request, consistent with the privacy policy).
 
 These routes only exist in **self-hosted** builds. They are incompatible with static export (`output: 'export'`) because they read the `Request`; `npm run build:export` temporarily moves `src/app/api` out of the tree during the build (see Build & Run).
 

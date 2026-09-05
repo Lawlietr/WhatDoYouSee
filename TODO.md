@@ -88,7 +88,7 @@
 - [x] Load model: `AutoModelForImageTextToText.from_pretrained(MODEL_ID, { device: 'webgpu', dtype: 'q4' })`
 - [x] Process image + prompt → return analysis (singleton pipeline, cached Promise)
 - [x] Handle model not loaded / unsupported (throw clear error)
-- [ ] ⚠ VERIFY at Phase 7.1: exact LFM2.5-VL input schema (`pixel_values`/`images` + chat template) needs a real WebGPU browser + downloaded model to confirm
+- [x] ⚠ VERIFY (done, Phase 7.1): LFM2.5-VL input schema confirmed via `AutoProcessor` + `apply_chat_template` — verified end-to-end with a real WebGPU browser (450M, Arc de Triomphe photo) and independently with the transformers.js wasm backend on the server
 
 ### Step 1.7: Model Download Manager
 - [x] Create `src/lib/download-manager.ts` (idb wrapper)
@@ -332,17 +332,35 @@ usePhotoAnalysis
 > **Local test setup** (LLM endpoint URL, API key, model name, etc.) lives in `LOCAL-TEST-NOTES.md` — gitignored, never committed, because this project is planned for open-sourcing. The test photo is at `public/test-photos/arc-de-triomphe.jpg` (Flickr C.C.; empty EXIF, so it also exercises the no-GPS map fallback).
 
 ### Step 7.1: Functional Testing
-### Step 7.1: Functional Testing
-- [ ] Test WebGPU mode with real photo
-- [ ] Test API mode with llama-server running
+- [x] Test WebGPU mode with real photo (user-verified: LFM2.5-VL-450M inference OK in real browser; pipeline also confirmed via transformers.js wasm backend on the server)
+- [x] Test API mode with llama-server running (user-verified: Qwen3.5-9B-VL endpoint works; llama-server runs with `--cors-origins *` so the browser can call it directly)
 - [ ] Test EXIF parsing with various image formats (JPG, PNG, HEIC)
-- [ ] Test model download → confirm → progress → completion
-- [ ] Test model download cancellation
-- [ ] Test settings persistence across page refreshes
-- [ ] Test provider switching
-- [ ] Test connection test with valid/invalid URLs
-- [ ] Test map display with/without GPS data
+- [x] Test model download → confirm → progress → completion (Playwright E2E + user's 771 MB 450M download)
+- [x] Test model download cancellation (Playwright E2E)
+- [x] Test settings persistence across page refreshes (Playwright E2E)
+- [x] Test provider switching (Playwright E2E)
+- [x] Test connection test with valid/invalid URLs (Playwright E2E + user)
+- [x] Test map display with/without GPS data (user-verified: GPS photo shows marker at correct location on 450M run; no-GPS dashed fallback verified in E2E)
 - [ ] Test mobile responsive layout
+
+### Step 7.5: Example Photos (replace placeholders)
+- [ ] Replace the 4 program-generated gradient placeholders in `public/examples/` with **up to 4 real photos** from a free-stock site (Unsplash, Pexels, Pixabay, or Flickr CC) — license allows free use, keep an attribution note per photo
+- [ ] Prefer photos with interesting inferable content (urban street scene, desk/workspace, travel landmark) so AI analysis of them is meaningful
+
+### Step 7.6: Prompt & Data-Table Refinement (based on original site's depth)
+- Observation: the original site's analysis reaches much deeper inferences — personal interests, estimated income, religion, brands of bags/clothing, etc. The current system prompt is generic ("location, time, devices, activities, relationships, socioeconomic status, habits").
+- [ ] Enrich `src/lib/providers/system-prompt.ts`: explicitly prompt the model to speculate on lifestyle, income bracket, personal interests/hobbies, religion/ethnic signals (when visible), brand/logo identification, and habits — each marked as speculative
+- [ ] Define a richer data-table schema in the prompt (grouped categories: Location / Time / Person / Socioeconomic / Devices / Brands / Relationships / Inferred Habits) so the table is consistent across runs
+- [ ] Note: the 450M model cannot follow the JSON-only output requirement (it returns prose; handled by `parseAnalysisResilient` in `providers/utils.ts`). For full table output the user needs 3B or a stronger backend model (Qwen3.5-9B-VL already returns 2 paragraphs + 9-row table)
+- [ ] Re-test prompt with both WebGPU 450M/3B and the user's llama-server (Qwen3.5-9B-VL) and adjust wording accordingly
+
+### Step 7.7: Wire up reverse geocoding (map address display)
+- Current gap: `GET /api/reverse-geocode` (Nominatim) exists in Phase 2 but the UI never calls it — the map shows a marker only, no address.
+- Plan (decided, not yet implemented):
+  - Show the resolved address next to/below the map when GPS is present
+  - **Self-hosted build**: call the existing `/api/reverse-geocode` proxy (keeps the in-memory cache)
+  - **Static export (Cloudflare/HF)**: API routes don't exist — call Nominatim directly from the browser (`format=jsonv2`); this is a user-initiated request the user explicitly made by uploading a photo with GPS, consistent with the privacy policy; respect Nominatim usage policy (browser sends Referer automatically)
+  - Graceful fallback: if geocoding fails or is slow, the map still renders (address line hidden)
 
 ### Step 7.2: Error Handling
 - [ ] Network errors → user-friendly toast notification
@@ -369,11 +387,17 @@ usePhotoAnalysis
 
 ## Phase 8: Deployment
 
+> **Ordering decision (user):** deployment is deferred to a later session. **Local deployment (`npm run build && npm start`) must be fully functional first.** Cloudflare Pages is best-effort afterwards — if it cannot serve normal functionality (e.g. WebGPU on the static build), it is acceptable to **skip** it; self-hosted is the priority. Local dev servers keep the `0.0.0.0` bind convention for LAN testing.
+
+### Step 8.0: Local Production Verification (prerequisite, do first)
+- [ ] `npm run build && npm start -p 3103 -H 0.0.0.0` → verify all features over LAN: WebGPU (via `scripts/https-test-server.mjs` → `https://<lan-ip>:3443`), API mode to user's llama-server, upload → analysis → map → settings round-trip
+- [ ] Verify asset integrity after rebuild (all `/_next/static/chunks/*.js` must return 200 — see the build:export-vs-next-start pitfall in LOCAL-TEST-NOTES.md)
+
 ### Step 8.1: Static Export Build
-- [ ] `next.config.ts` toggles `output: 'export'` via `NEXT_STATIC_EXPORT=1`; `images.unoptimized: true` always set
-- [ ] Run `npm run build:export` → confirm `/out` directory generated (API routes auto-excluded + restored)
-- [ ] Verify `/out` contains: `index.html`, `_next/static/`, `404.html`, `examples/`
-- [ ] Local test: `npx serve out` → verify all features work
+- [x] `next.config.ts` toggles `output: 'export'` via `NEXT_STATIC_EXPORT=1`; `images.unoptimized: true` always set
+- [x] Run `npm run build:export` → `/out` generated (API routes auto-excluded + restored) — verified multiple times
+- [x] Verify `/out` contains: `index.html`, `_next/static/`, `404.html`, `examples/`
+- [ ] Local test: `npx serve out` → verify all features work (WebGPU-only feature set; API routes absent by design)
 - [ ] Note: self-hosted (with API routes) uses `npm run build && npm start`, NOT `build:export`
 
 ### Step 8.2: Cloudflare Pages (Recommended)
@@ -489,5 +513,5 @@ types.ts
 | Phase 4: Settings UI | ✅ Done (4.1–4.7) | ed31d8f; settings drawer, provider selector/config, connection test, WebGPU model mgmt + download progress |
 | Phase 5: Settings Hooks | ✅ Done (5.1–5.5) | useSettings/useProvider/useModelDownload/useWebGPU/usePhotoAnalysis; webgpu per-model pipelines; llama-server API-key support |
 | Phase 6: Main Page | ✅ Done (6.1–6.3) | page.tsx hero + two-column assembly, AppProviders, llama-server /v1 auto-normalize + API-key detect, Playwright E2E 15/15 |
-| Phase 7: Testing | ⬜ Not started | |
-| Phase 8: Deployment | ⬜ Not started | |
+| Phase 7: Testing | 🔄 In progress | 7.1 mostly verified (WebGPU + API + download + settings + map both directions); pending: EXIF format matrix, mobile responsive, 7.5 example photos, 7.6 prompt/table refinement, 7.7 reverse-geocode wiring |
+| Phase 8: Deployment | ⏸ Deferred | Local production verification first (8.0); Cloudflare Pages best-effort, skippable if it can't serve normal functionality |
