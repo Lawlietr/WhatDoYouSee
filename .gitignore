@@ -20,6 +20,9 @@
 # production
 /build
 
+# local test credentials (never commit)
+LOCAL-TEST-NOTES.md
+
 # misc
 .DS_Store
 *.pem
