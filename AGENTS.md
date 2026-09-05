@@ -190,6 +190,10 @@ npm start -- -p 3103 -H 0.0.0.0   # test servers always bind 0.0.0.0, never loca
 # Production build — static export for Cloudflare/HF (excludes API routes)
 npm run build:export
 
+# Optional — HTTPS test server (secure context so WebGPU works when the app is
+# reached over a LAN IP; self-signed cert generated at scripts/.devcert/ on first run)
+node scripts/https-test-server.mjs   # https://<lan-ip>:3443 -> http://127.0.0.1:3103
+
 # Optional (local dev testing only) — the app connects to the user's OWN llama-server;
 # we never host or launch one. Vision requires the mmproj projector: llama-server -m <model>.gguf --mmproj <mmproj>.gguf --port 8080
 ```

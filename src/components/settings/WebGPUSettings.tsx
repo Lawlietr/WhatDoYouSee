@@ -40,6 +40,7 @@ async function computeCacheMap(): Promise<Record<string, { bytes: number }>> {
 
 export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) {
   const [support, setSupport] = useState<"checking" | "yes" | "no">("checking");
+  const isSecureContext = typeof window === "undefined" ? true : window.isSecureContext;
   const [cached, setCached] = useState<Record<string, { bytes: number }>>({});
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
@@ -123,7 +124,14 @@ export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) 
           </Typography>
         </Box>
       )}
-      {support === "no" && (
+      {support === "no" && !isSecureContext && (
+        <Alert severity="warning" sx={{ fontSize: "0.8rem" }}>
+          WebGPU is hidden because this page is not in a secure context (HTTP on a
+          non-localhost address). Your browser may still support WebGPU — open the app
+          via https://… or http://localhost… (e.g. an SSH tunnel) to enable it.
+        </Alert>
+      )}
+      {support === "no" && isSecureContext && (
         <Alert severity="warning" sx={{ fontSize: "0.8rem" }}>
           WebGPU is not available in this browser. Photos will be processed on your own
           hardware only via API mode.

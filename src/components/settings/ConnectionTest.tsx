@@ -15,10 +15,10 @@ function failureHint(provider: AIProvider): string {
   switch (provider.id) {
     case "llama-server":
       return (
-        "Check that the URL is reachable from this browser. " +
-        "If the page is served over HTTPS, the server must also be HTTPS " +
-        "(localhost URLs are the only allowed exception). " +
-        "A server on a LAN IP may need the --cors-origins flag."
+        "Common causes: " +
+        "(1) llama-server must be started with a --cors-origins flag — without it, browsers block cross-origin requests (restart it with --cors-origins '*'). " +
+        "(2) The server is unreachable from this browser (different network, firewall, or wrong address). " +
+        "(3) This page is served over HTTPS but the server is HTTP (mixed content) — localhost URLs are the only allowed exception."
       );
     case "webgpu":
       return "This browser does not expose the WebGPU API. Try a recent Chrome or Edge.";

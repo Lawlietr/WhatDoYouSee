@@ -56,8 +56,12 @@ async function chatCompletion(
           ],
         },
       ],
-      max_tokens: 2048,
+      max_tokens: 4096,
       temperature: 0.3,
+      // Qwen3/Qwen3.5 "thinking" models spend their whole token budget in
+      // reasoning_content and leave content empty; llama.cpp honors this
+      // template kwarg and non-Qwen templates ignore it.
+      chat_template_kwargs: { enable_thinking: false },
     }),
   }, INFER_TIMEOUT_MS);
 
@@ -68,10 +72,24 @@ async function chatCompletion(
   }
 
   const data = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
+    choices?: Array<{
+      message?: { content?: string; reasoning_content?: string };
+      finish_reason?: string;
+    }>;
+    usage?: { completion_tokens?: number };
   };
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("llama-server returned no content");
+  const choice = data.choices?.[0];
+  let content = choice?.message?.content ?? "";
+  // Fallback for thinking models whose budget was exhausted inside
+  // reasoning_content, so the user sees something instead of nothing.
+  if (!content.trim()) content = choice?.message?.reasoning_content ?? "";
+  if (!content.trim()) {
+    throw new Error(
+      `llama-server returned no content (finish_reason: ${choice?.finish_reason ?? "?"}, ` +
+        `${data.usage?.completion_tokens ?? "?"} tokens). If this is a "thinking" model ` +
+        `its reasoning may have exhausted the token budget; try a non-thinking model.`
+    );
+  }
   return content;
 }
 
