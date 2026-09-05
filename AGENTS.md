@@ -181,11 +181,11 @@ These routes only exist in **self-hosted** builds. They are incompatible with st
 npm install
 
 # Development
-npm run dev -- -p 3100   # port 3000 is occupied by a docker proxy on the dev machine
+npm run dev -- -p 3100 -H 0.0.0.0   # port 3000 is occupied by a docker proxy; -H 0.0.0.0 so LAN machines can test
 
 # Production build — self-hosted (keeps API routes, run with `next start`)
 npm run build
-npm start
+npm start -- -p 3103 -H 0.0.0.0   # test servers always bind 0.0.0.0, never localhost (LAN testing)
 
 # Production build — static export for Cloudflare/HF (excludes API routes)
 npm run build:export
