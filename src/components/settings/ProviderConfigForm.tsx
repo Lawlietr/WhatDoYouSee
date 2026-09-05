@@ -90,24 +90,25 @@ interface ModelFieldProps {
   field: ConfigField;
   value: string;
   baseUrl: string;
+  apiKey?: string;
   error: string | null;
   onChange: (value: string) => void;
 }
 
-function ModelField({ field, value, baseUrl, error, onChange }: ModelFieldProps) {
+function ModelField({ field, value, baseUrl, apiKey, error, onChange }: ModelFieldProps) {
   const [options, setOptions] = useState<string[]>([]);
   const [detecting, setDetecting] = useState(false);
   const [detectError, setDetectError] = useState<string | null>(null);
 
   const detect = useCallback(async () => {
-    if (!URL_PATTERN.test(baseUrl)) {
-      setDetectError("Enter a valid Base URL first");
+    if (!baseUrl.trim()) {
+      setDetectError("Enter the server URL first");
       return;
     }
     setDetecting(true);
     setDetectError(null);
     try {
-      const models = await fetchAvailableModels(baseUrl);
+      const models = await fetchAvailableModels(baseUrl, apiKey);
       setOptions(models);
       if (models.length === 0) {
         setDetectError("Server is reachable but has no loaded models.");
@@ -117,7 +118,7 @@ function ModelField({ field, value, baseUrl, error, onChange }: ModelFieldProps)
     } finally {
       setDetecting(false);
     }
-  }, [baseUrl]);
+  }, [baseUrl, apiKey]);
 
   return (
     <Box>
@@ -194,6 +195,7 @@ export function ProviderConfigForm({ provider, value, onChange }: ProviderConfig
                 field={field}
                 value={currentValue}
                 baseUrl={value.baseUrl ?? ""}
+                apiKey={value.apiKey}
                 error={error}
                 onChange={(v) => setField(field.key, v)}
               />
@@ -224,7 +226,7 @@ export function ProviderConfigForm({ provider, value, onChange }: ProviderConfig
               onChange={(e) => setField(field.key, e.target.value)}
               onBlur={() => setTouched((t) => ({ ...t, [field.key]: true }))}
               error={!!error}
-              helperText={error ?? ""}
+              helperText={error ?? field.helperText ?? ""}
             />
           );
         })}

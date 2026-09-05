@@ -7,6 +7,14 @@ const DEFAULT_BASE_URL = "http://localhost:8080/v1";
 const CONNECT_TIMEOUT_MS = 10000;
 const INFER_TIMEOUT_MS = 10 * 60 * 1000;
 
+function normalizeBaseUrl(baseUrl: string): string {
+  let base = baseUrl.trim().replace(/\/$/, "");
+  if (!base) base = DEFAULT_BASE_URL;
+  if (!/^https?:\/\//i.test(base)) base = `http://${base}`;
+  if (!/\/v1$/i.test(base)) base += "/v1";
+  return base;
+}
+
 async function fetchWithTimeout(
   url: string,
   init: RequestInit = {},
@@ -32,7 +40,7 @@ async function chatCompletion(
   imageDataUrl: string,
   apiKey?: string
 ): Promise<string> {
-  const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
+  const url = `${normalizeBaseUrl(baseUrl)}/chat/completions`;
   const response = await fetchWithTimeout(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders(apiKey) },
@@ -80,7 +88,7 @@ export async function fetchAvailableModels(
   apiKey?: string
 ): Promise<string[]> {
   const response = await fetchWithTimeout(
-    `${baseUrl.replace(/\/$/, "")}/models`,
+    `${normalizeBaseUrl(baseUrl)}/models`,
     { headers: authHeaders(apiKey) }
   );
   if (!response.ok) {
@@ -99,10 +107,11 @@ export const llamaServerProvider: AIProvider = {
   configSchema: [
     {
       key: "baseUrl",
-      label: "Base URL",
-      type: "url",
+      label: "Server",
+      type: "text",
       required: true,
-      placeholder: DEFAULT_BASE_URL,
+      placeholder: "http://<llama-server-host:port>",
+      helperText: "host:port of your llama-server — the /v1 prefix is added automatically",
     },
     {
       key: "model",
@@ -110,6 +119,7 @@ export const llamaServerProvider: AIProvider = {
       type: "text",
       required: false,
       placeholder: "preset name or model id from /v1/models (blank = auto-detect)",
+      helperText: "baseUrl only needs host:port — /v1 is added automatically",
     },
     {
       key: "apiKey",
@@ -145,7 +155,7 @@ export const llamaServerProvider: AIProvider = {
     const baseUrl = config.baseUrl || DEFAULT_BASE_URL;
     try {
       const response = await fetchWithTimeout(
-        `${baseUrl.replace(/\/$/, "")}/models`,
+        `${normalizeBaseUrl(baseUrl)}/models`,
         { headers: authHeaders(config.apiKey) }
       );
       return response.ok;

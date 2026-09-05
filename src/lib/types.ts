@@ -28,6 +28,7 @@ export interface ConfigField {
   type: "text" | "url" | "password";
   required: boolean;
   placeholder?: string;
+  helperText?: string;
 }
 
 export interface AIProvider {

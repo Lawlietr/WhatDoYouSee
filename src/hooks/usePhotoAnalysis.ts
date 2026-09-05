@@ -25,6 +25,7 @@ interface PhotoAnalysisState {
   result: AnalysisResponse | null;
   meta: AnalysisMeta | null;
   error: string | null;
+  exif: EXIFData | null;
 }
 
 const INITIAL: PhotoAnalysisState = {
@@ -33,6 +34,7 @@ const INITIAL: PhotoAnalysisState = {
   result: null,
   meta: null,
   error: null,
+  exif: null,
 };
 
 export function usePhotoAnalysis() {
@@ -51,6 +53,7 @@ export function usePhotoAnalysis() {
         } catch {
           // no readable EXIF — continue without it
         }
+        setState((s) => ({ ...s, exif: Object.keys(exif).length > 0 ? exif : null }));
         setState((s) => ({ ...s, stage: "compressing" }));
         const compressed = await compressImage(file);
         setState((s) => ({ ...s, stage: "analyzing" }));
@@ -58,7 +61,8 @@ export function usePhotoAnalysis() {
           { file: compressed, exif, language: settings.language },
           config
         );
-        setState({
+        setState((s) => ({
+          ...s,
           isAnalyzing: false,
           stage: "done",
           result: response,
@@ -68,7 +72,7 @@ export function usePhotoAnalysis() {
             latencyMs: Date.now() - startedAt,
           },
           error: null,
-        });
+        }));
         return response;
       } catch (e) {
         const message = e instanceof Error ? e.message : "Analysis failed";

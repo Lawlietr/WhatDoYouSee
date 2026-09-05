@@ -277,19 +277,21 @@ Next.js 16 static export (`output: 'export'`) **cannot compile** route handlers 
 ## Phase 6: Main Page Assembly
 
 ### Step 6.1: Page Layout
-- [ ] Update `src/app/page.tsx`
-- [ ] Two-column layout (responsive):
-  - Left: original photo + EXIF info
-  - Right: analysis results (description / data tabs)
-- [ ] Mobile: single column, stacked layout
-- [ ] Header with settings gear icon (opens SettingsPanel)
+- [x] Update `src/app/page.tsx` — hero screen (headline + upload + examples) → two-column grid on analyze (left: photo + EXIF; right: loading/error/result + meta line + map + "Analyze another photo"); `md` breakpoint stacks to single column on mobile; header bar with title + settings gear
+- [x] Two-column layout (responsive): left photo + EXIF, right results (description / data tabs)
+- [x] Mobile: single column, stacked layout
+- [x] Header with settings gear icon (opens SettingsPanel)
+- [x] `AppProviders` client boundary wraps `SettingsProvider` in layout (page is SSG — hooks need the provider at prerender)
 
 ### Step 6.2: Integrate All Components
-- [ ] Wire up: PhotoUpload → usePhotoAnalysis → AnalysisResult
-- [ ] Wire up: ExamplePhotos → same flow
-- [ ] Wire up: MapView with EXIF GPS data
-- [ ] Wire up: SettingsPanel with useSettings
-- [ ] Wire up: InferenceModeToggle with settings
+- [x] Wire up: PhotoUpload → usePhotoAnalysis → AnalysisResult (photo selection triggers `analyze(file)` immediately; controlled `file` prop keeps the preview)
+- [x] Wire up: ExamplePhotos → same flow (same `onPhotoSelected` handler)
+- [x] Wire up: MapView with EXIF GPS data (no-GPS dashed fallback verified with the Arc photo that has empty EXIF)
+- [x] Wire up: SettingsPanel with useSettings (`onSave` → `updateSettings`; panel closes itself after saving)
+- [x] Mode reflected in hero copy ("in your browser" vs "on your own server")
+- [x] Error state: Alert + Retry button re-runs `analyze(photo)`
+- [x] **llama-server baseUrl hardening** (found during E2E): users paste bare `host:port` — `normalizeBaseUrl()` auto-adds `http://` and `/v1`; settings field is now plain `Server` text with helperText (no more `http://` URL validation); model-detect + test-connection respect the API key; `ConfigField.helperText` added to types + form rendering
+- [x] **E2E verified (Playwright, production build, 15/15 pass)**: hero → upload Arc de Triomphe → loading animation → mock API result → meta line → Data tab table → EXIF empty state → map no-GPS fallback → back to hero → settings drawer; zero console errors, zero 4xx/5xx
 
 ### Step 6.3: State Flow
 ```
@@ -490,6 +492,6 @@ types.ts
 | Phase 3: React Components | ✅ Done (3.1–3.6) | db882f3; upload/examples/EXIF/results/map/loading |
 | Phase 4: Settings UI | ✅ Done (4.1–4.7) | ed31d8f; settings drawer, provider selector/config, connection test, WebGPU model mgmt + download progress |
 | Phase 5: Settings Hooks | ✅ Done (5.1–5.5) | useSettings/useProvider/useModelDownload/useWebGPU/usePhotoAnalysis; webgpu per-model pipelines; llama-server API-key support |
-| Phase 6: Main Page | ⬜ Not started | |
+| Phase 6: Main Page | ✅ Done (6.1–6.3) | page.tsx hero + two-column assembly, AppProviders, llama-server /v1 auto-normalize + API-key detect, Playwright E2E 15/15 |
 | Phase 7: Testing | ⬜ Not started | |
 | Phase 8: Deployment | ⬜ Not started | |
