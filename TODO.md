@@ -327,7 +327,11 @@ usePhotoAnalysis
 
 ## Phase 7: Testing & Polish
 
-> **Local test llama-server** (user's LAN, for API-mode vision tests): `http://<llama-server-host:port>`, API key `<api-key>` (started with `--api-key`), model `<model-name>` (vision-capable; needs `--mmproj` projector). Note the machine may be powered off — verify reachability before testing. Browser page is served over HTTP so mixed-content is not an issue; the server needs `--cors-origins` for cross-origin requests from the app's origin.
+> **Local test llama-server** (user's LAN, for API-mode vision tests): `http://<llama-server-host:port>`, API key `<api-key>` (started with `--api-key`), model name `<model-name>` (vision-capable; needs `--mmproj` projector). Note the machine may be powered off — verify reachability before testing. Browser page is served over HTTP so mixed-content is not an issue; the server needs `--cors-origins` for cross-origin requests from the app's origin.
+>
+> **WebGPU test model choice:** prefer the smallest model `LiquidAI/LFM2.5-VL-450M-ONNX` (~0.52 GB) to minimize download time; only escalate to 1.6B / 3B if 450M output is insufficient.
+>
+> **Test photo:** Arc de Triomphe (Paris) from https://www.gvm.com.tw/article/55345 — saved to `public/test-photos/` once downloaded.
 
 ### Step 7.1: Functional Testing
 ### Step 7.1: Functional Testing
