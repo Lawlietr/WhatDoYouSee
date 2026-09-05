@@ -28,12 +28,13 @@ WebGPU models are catalogued in `src/lib/model-catalog.ts` (`WEBGPU_MODELS`); si
 
 | Mode | Model ID | Format | Download Size |
 |------|----------|--------|---------------|
-| WebGPU (default) | `LiquidAI/LFM2.5-VL-3B-ONNX` | ONNX Q4 | ~2.76 GB |
-| WebGPU (optional) | `LiquidAI/LFM2.5-VL-1.6B-ONNX` | ONNX Q4 | ~1.42 GB |
-| WebGPU (optional) | `LiquidAI/LFM2.5-VL-450M-ONNX` | ONNX Q4 | ~0.52 GB |
+| WebGPU (default) | `LiquidAI/LFM2.5-VL-3B-ONNX` | ONNX (fp16 encoder + q4 decoder) | ~3.72 GB |
+| WebGPU (optional) | `LiquidAI/LFM2.5-VL-450M-ONNX` | ONNX (fp16 encoder + q4 decoder) | ~0.75 GB |
+
+**Model catalog notes** (`src/lib/model-catalog.ts`): sizes are the exact byte totals of the files transformers.js actually loads (per-submodel dtype map + external-data shards + JSON/tokenizer files), verified from the HF tree API. The 1.6B repo is NOT included: its ONNX sub-model files are named `decoder`/`embed_images`, which don't match transformers.js v4's `lfm2_vl` session config (`vision_encoder`/`decoder_model_merged`), so it cannot load. Inference follows the HF model card: `AutoModelForImageTextToText` + `AutoProcessor` (chat template + image tiling), `generate({ do_sample: false })`, slice + `batch_decode`.
 | Backend | `LiquidAI/LFM2.5-VL-3B-GGUF` | GGUF Q4_K_M | ~1.67 GB (user's llama-server) |
 
-**WebGPU download path** (`src/lib/model-cache.ts`): models are NOT prefetched via `from_pretrained` (transformers.js has no AbortSignal support there). Instead: HF tree API (`/api/models/{id}/tree/main?recursive=true`) lists files → filter `*_q4.onnx*` + `*.json` → each file is fetched with `AbortController` + streamed chunk-by-chunk (progress + speed per chunk) → stored in the Cache API under key `https://huggingface.co/{modelId}/resolve/main/{filename}` (transformers.js's default `env.cacheKey` cache name is `transformers-cache`) → then `from_pretrained` resolves instantly from the warm cache. Speed display is clamped to a 10 GB/s sanity cap.
+**WebGPU download path** (`src/lib/model-cache.ts`): models are NOT prefetched via `from_pretrained` (transformers.js has no AbortSignal support there). Instead: HF tree API (`/api/models/{id}/tree/main?recursive=true`) lists files → filter by the per-model `filePatterns` in `model-catalog.ts` (matching exactly the files `from_pretrained` resolves for that model's dtype map, incl. `_onnx_data(_N)?` shards) → each file is fetched with `AbortController` + streamed chunk-by-chunk (progress + speed per chunk) → stored in the Cache API under key `https://huggingface.co/{modelId}/resolve/main/{filename}` (transformers.js's default `env.cacheKey` cache name is `transformers-cache`) → the prefetch then reports a `loading` phase while `from_pretrained` loads weights into WebGPU (first run compiles shaders, can take minutes — the UI shows a spinner for this phase instead of a frozen bar). Speed display is clamped to a 10 GB/s sanity cap. `cachedModelState` verifies ALL required files are present (a partial cache is reported as not downloaded, and re-download skips already-cached files).
 
 ## Architecture
 

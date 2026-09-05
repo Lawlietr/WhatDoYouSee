@@ -48,6 +48,7 @@ export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) 
   const [download, setDownload] = useState<{
     model: ModelInfo;
     progress: DownloadProgressState;
+    phase: "downloading" | "loading";
   } | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -74,10 +75,15 @@ export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) 
     abortRef.current = controller;
     setDialogOpen(false);
     setDownloadError(null);
-    setDownload({ model, progress: { loaded: 0, total: 0, speedBps: 0, percent: 0 } });
+    setDownload({
+      model,
+      progress: { loaded: 0, total: 0, speedBps: 0, percent: 0 },
+      phase: "downloading",
+    });
     prefetchModel(model.id, {
       onProgress: (progress) =>
         setDownload((d) => (d ? { ...d, progress } : d)),
+      onPhase: (phase) => setDownload((d) => (d ? { ...d, phase } : d)),
       signal: controller.signal,
     })
       .then(() => {
@@ -170,6 +176,7 @@ export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) 
           progress={download.progress}
           modelLabel={download.model.name}
           onCancel={cancelDownload}
+          phase={download.phase}
         />
       )}
       {downloadError && (
@@ -183,7 +190,14 @@ export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) 
         models={WEBGPU_MODELS}
         currentModelId={modelId}
         cachedIds={Object.keys(cached)}
-        onConfirm={startDownload}
+        onConfirm={(model) => {
+          if (cached[model.id]) {
+            onModelChange(model.id);
+            setDialogOpen(false);
+          } else {
+            startDownload(model);
+          }
+        }}
         onClose={() => setDialogOpen(false)}
       />
 

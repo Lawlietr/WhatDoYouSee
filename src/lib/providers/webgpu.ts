@@ -1,70 +1,147 @@
-import type { AIProvider, AnalysisRequest, AnalysisResponse, ProviderConfig } from "../types";
+"use client";
+
+import type {
+  AIProvider,
+  AnalysisRequest,
+  AnalysisResponse,
+  ProviderConfig,
+} from "../types";
 import { PRIVACY_ANALYSIS_SYSTEM_PROMPT, buildUserPrompt } from "./system-prompt";
 import { parseAnalysisJson } from "./utils";
+import { getModelInfo } from "../model-catalog";
 import { DEFAULT_WEBGPU_MODEL } from "./defaults";
+import { isWebGpuSupported as checkGpu } from "./webgpu-support";
 
-type RawImageType = import("@huggingface/transformers").RawImage;
-
-const pipelineCache = new Map<string, Promise<WebGPUState>>();
-
-interface WebGPUState {
-  run(images: RawImageType[], prompt: string): Promise<string>;
+interface VlMessageContent {
+  type: string;
+  text?: string;
 }
 
-function isBrowser(): boolean {
-  return typeof navigator !== "undefined" && "gpu" in navigator;
+interface VlMessage {
+  role: string;
+  content: string | VlMessageContent[];
 }
 
-async function getDevice(): Promise<GPUAdapter | null> {
-  if (!isBrowser()) return null;
-  const gpu = (navigator as Navigator & { gpu?: GPU }).gpu;
-  return gpu ? gpu.requestAdapter() : null;
+type TransformersModule = typeof import("@huggingface/transformers");
+type RawImageType = InstanceType<TransformersModule["RawImage"]>;
+
+interface VlInputs {
+  input_ids: { dims: readonly (number | null)[] };
+  [key: string]: unknown;
 }
 
-async function loadPipeline(modelId: string): Promise<WebGPUState> {
-  const cached = pipelineCache.get(modelId);
-  if (cached) return cached;
+interface VlOutputs {
+  dims: readonly (number | null)[];
+  slice(...slices: (number | number[] | null)[]): VlOutputs;
+}
+
+interface VlProcessor {
+  (image: RawImageType, text: string, options: Record<string, unknown>): Promise<VlInputs>;
+  apply_chat_template(messages: VlMessage[], options: { add_generation_prompt: boolean }): string;
+  batch_decode(input: VlOutputs, options: { skip_special_tokens: boolean }): string[];
+}
+
+interface VlPipeline {
+  model: {
+    generate(inputs: VlInputs): Promise<VlOutputs>;
+  };
+  processor: VlProcessor;
+}
+
+const pipelines = new Map<string, Promise<VlPipeline>>();
+
+async function loadPipeline(modelId: string): Promise<VlPipeline> {
+  const existing = pipelines.get(modelId);
+  if (existing) return existing;
   const promise = (async () => {
-    const { AutoModelForImageTextToText, AutoTokenizer, env } = await import(
-      "@huggingface/transformers"
-    );
+    const { AutoModelForImageTextToText, AutoProcessor, env } = await loadTransformers();
     env.allowLocalModels = false;
-
-    const model = await AutoModelForImageTextToText.from_pretrained(modelId, {
-      device: "webgpu",
-      dtype: "q4",
-    });
-    const tokenizer = await AutoTokenizer.from_pretrained(modelId);
-
-    return {
-      async run(images: RawImageType[], prompt: string): Promise<string> {
-        const text = `${PRIVACY_ANALYSIS_SYSTEM_PROMPT}\n\n${prompt}`;
-        const inputs = {
-          input_ids: (await tokenizer(text, {
-            padding: true,
-            truncation: true,
-            max_length: 2048,
-          })) as Record<string, unknown>,
-          pixel_values: images,
-        };
-        const outputs = (await model.generate({ ...inputs, max_new_tokens: 2048 })) as {
-          sequence: { toString(): string };
-        }[];
-        const generated = outputs[0].sequence;
-        return generated.toString().slice(text.length);
-      },
-    };
+    const info = getModelInfo(modelId);
+    const device = (await checkGpu()) ? "webgpu" : "wasm";
+    const [model, processor] = await Promise.all([
+      AutoModelForImageTextToText.from_pretrained(modelId, {
+        device,
+        dtype: info?.dtype ?? "q4",
+      }),
+      AutoProcessor.from_pretrained(modelId),
+    ]);
+    if (!model) throw new Error("Failed to load model");
+    if (!processor) throw new Error("Failed to load processor");
+    return { model, processor } as VlPipeline;
   })();
-  pipelineCache.set(modelId, promise);
-  promise.catch(() => pipelineCache.delete(modelId));
+  pipelines.set(modelId, promise);
+  promise.catch(() => pipelines.delete(modelId));
   return promise;
 }
 
-async function loadRawImage(url: string): Promise<RawImageType> {
-  const { RawImage } = await import("@huggingface/transformers");
-  return (await RawImage.fromURL(url)) as RawImageType;
+let transformersPromise: Promise<TransformersModule> | null = null;
+
+function loadTransformers(): Promise<TransformersModule> {
+  transformersPromise ??= import("@huggingface/transformers");
+  return transformersPromise;
 }
 
+async function loadImage(file: Blob): Promise<RawImageType> {
+  const { RawImage } = await loadTransformers();
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = url;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not create canvas context");
+    ctx.drawImage(img, 0, 0);
+    return await RawImage.fromCanvas(canvas);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function run(modelId: string, file: Blob, request: AnalysisRequest): Promise<string> {
+  const [pipeline, image] = await Promise.all([
+    loadPipeline(modelId),
+    loadImage(file),
+  ]);
+  const messages: VlMessage[] = [
+    { role: "system", content: PRIVACY_ANALYSIS_SYSTEM_PROMPT },
+    {
+      role: "user",
+      content: [
+        { type: "image" },
+        { type: "text", text: buildUserPrompt(request.exif ?? {}) },
+      ],
+    },
+  ];
+  const chatPrompt = pipeline.processor.apply_chat_template(messages, {
+    add_generation_prompt: true,
+  });
+  const inputs = await pipeline.processor(image, chatPrompt, {
+    add_special_tokens: false,
+  });
+  const outputs = await pipeline.model.generate({
+    ...inputs,
+    do_sample: false,
+    max_new_tokens: 3072,
+  });
+  const dims = inputs.input_ids.dims;
+  const inputLength = dims[dims.length - 1] ?? 0;
+  const outDims = outputs.dims;
+  const total = outDims[outDims.length - 1] ?? 0;
+  const generated = outputs.slice(null, [inputLength, total]);
+  const text = pipeline.processor.batch_decode(generated, {
+    skip_special_tokens: true,
+  })[0];
+  if (typeof text !== "string" || text.length === 0) {
+    throw new Error("The model returned an empty response");
+  }
+  return text;
+}
 
 export const webgpuProvider: AIProvider = {
   id: "webgpu",
@@ -72,30 +149,20 @@ export const webgpuProvider: AIProvider = {
   requiresApiKey: false,
   supportsVision: true,
   enabled: true,
-  configSchema: [
-    { key: "model", label: "Model", type: "text", required: false, placeholder: DEFAULT_WEBGPU_MODEL },
-  ],
+  configSchema: [],
 
-  async analyze(request: AnalysisRequest, config: ProviderConfig): Promise<AnalysisResponse> {
-    if (!isBrowser() || !(await getDevice())) {
-      throw new Error("WebGPU is not supported in this browser");
-    }
-    const modelId = config.model || DEFAULT_WEBGPU_MODEL;
-    const url = URL.createObjectURL(request.file);
-    try {
-      const [rawImage, pipeline] = await Promise.all([loadRawImage(url), loadPipeline(modelId)]);
-      const text = await pipeline.run([rawImage], buildUserPrompt(request.exif));
-      return parseAnalysisJson(text);
-    } finally {
-      URL.revokeObjectURL(url);
-    }
+  async analyze(
+    request: AnalysisRequest,
+    config: ProviderConfig
+  ): Promise<AnalysisResponse> {
+    const modelId = config.model ?? DEFAULT_WEBGPU_MODEL;
+    const text = await run(modelId, request.file, request);
+    return parseAnalysisJson(text);
   },
 
   async testConnection(_config: ProviderConfig): Promise<boolean> {
-    return isBrowser() && (await getDevice()) != null;
+    return checkGpu();
   },
 };
 
-export async function isWebGpuSupported(): Promise<boolean> {
-  return isBrowser() && (await getDevice()) != null;
-}
+export { isWebGpuSupported } from "./webgpu-support";

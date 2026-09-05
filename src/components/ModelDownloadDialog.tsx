@@ -42,6 +42,7 @@ export function ModelDownloadDialog({
           {models.map((model) => (
             <Box
               key={model.id}
+              onClick={() => setSelectedId(model.id)}
               sx={{
                 display: "flex",
                 alignItems: "flex-start",
@@ -49,6 +50,7 @@ export function ModelDownloadDialog({
                 py: 0.5,
                 borderRadius: 1,
                 px: 1,
+                cursor: "pointer",
                 bgcolor: model.id === selected?.id ? "action.hover" : "transparent",
               }}
             >
@@ -61,14 +63,14 @@ export function ModelDownloadDialog({
               <Box>
                 <Typography variant="body2">
                   {model.name}
-                  {cachedIds.includes(model.id) && (
-                    <Typography component="span" variant="caption" color="success.main" sx={{ ml: 1 }}>
-                      Downloaded
-                    </Typography>
-                  )}
                   {model.id === currentModelId && (
                     <Typography component="span" variant="caption" sx={{ ml: 1 }} color="primary">
                       (active)
+                    </Typography>
+                  )}
+                  {cachedIds.includes(model.id) && model.id !== currentModelId && (
+                    <Typography component="span" variant="caption" color="success.main" sx={{ ml: 1 }}>
+                      Downloaded
                     </Typography>
                   )}
                 </Typography>
@@ -109,10 +111,14 @@ export function ModelDownloadDialog({
         {selected && (
           <Button
             variant="contained"
-            disabled={cachedIds.includes(selected.id)}
+            disabled={selected.id === currentModelId}
             onClick={() => onConfirm(selected)}
           >
-            {cachedIds.includes(selected.id) ? "Downloaded" : "Download model"}
+            {selected.id === currentModelId
+              ? "Current model"
+              : cachedIds.includes(selected.id)
+                ? "Use this model"
+                : `Download (${formatBytes(selected.sizeBytes)})`}
           </Button>
         )}
       </DialogActions>

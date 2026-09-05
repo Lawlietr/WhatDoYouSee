@@ -1,6 +1,8 @@
+import type { DataType } from "@huggingface/transformers";
 import type { DownloadProgress } from "./types";
 import { clearModelCache } from "./download-manager";
-import { isWebGpuSupported } from "./providers/webgpu";
+import { getModelInfo } from "./model-catalog";
+import { isWebGpuSupported } from "./providers/webgpu-support";
 
 export const TRANSFORMERS_CACHE_NAME = "transformers-cache";
 
@@ -27,6 +29,23 @@ export function remoteFileUrl(modelId: string, filename: string): string {
 
 export async function cachedModelState(modelId: string): Promise<CacheStatus> {
   if (typeof caches === "undefined") return { cached: false, bytes: 0 };
+  const info = getModelInfo(modelId);
+  if (info?.filePatterns) {
+    const files = await listModelFiles(modelId, info.filePatterns);
+    const cache = await caches.open(TRANSFORMERS_CACHE_NAME);
+    let bytes = 0;
+    let missing = 0;
+    for (const f of files) {
+      const resp = await cache.match(remoteFileUrl(modelId, f.path));
+      if (!resp) {
+        missing++;
+        continue;
+      }
+      const length = Number(resp.headers.get("content-length") ?? 0);
+      bytes += Number.isFinite(length) ? length : 0;
+    }
+    return { cached: missing === 0 && files.length > 0, bytes };
+  }
   const names = (await caches.keys()).filter((n) =>
     n === TRANSFORMERS_CACHE_NAME || n.toLowerCase().includes("cache")
   );
@@ -63,6 +82,7 @@ export async function clearWebGpuModelCache(modelId?: string): Promise<void> {
 
 export async function listModelFiles(
   modelId: string,
+  patterns: string[],
   signal?: AbortSignal
 ): Promise<ModelFile[]> {
   const res = await fetch(
@@ -72,13 +92,12 @@ export async function listModelFiles(
   if (!res.ok) {
     throw new Error(`Failed to list model files: ${res.status} ${res.statusText}`);
   }
+  const regexes = patterns.map((p) => new RegExp(p));
   const entries = (await res.json()) as { type: string; path: string; size?: number }[];
   return entries
     .filter((e) => e.type === "file")
     .map((e) => ({ path: e.path, size: e.size ?? 0 }))
-    .filter(
-      (f) => /\.json$/.test(f.path) || /_q4\.onnx(_data(\d+)?)?$/.test(f.path)
-    );
+    .filter((f) => regexes.some((re) => re.test(f.path)));
 }
 
 interface SpeedTracker {
@@ -174,38 +193,54 @@ export async function downloadModelFiles(
   tracker.report(doneBytes, total);
 }
 
-export async function loadPrefetchedModel(modelId: string): Promise<void> {
-  const { AutoModelForImageTextToText, AutoTokenizer, env } = await import(
+export async function loadPrefetchedModel(
+  modelId: string,
+  dtype?: Record<string, DataType>
+): Promise<void> {
+  const { AutoModelForImageTextToText, AutoProcessor, env } = await import(
     "@huggingface/transformers"
   );
   env.allowLocalModels = false;
   const device = (await isWebGpuSupported()) ? "webgpu" : "wasm";
-  await Promise.all([
-    AutoModelForImageTextToText.from_pretrained(modelId, { device, dtype: "q4" }),
-    AutoTokenizer.from_pretrained(modelId),
+  const [model, processor] = await Promise.all([
+    AutoModelForImageTextToText.from_pretrained(modelId, {
+      device,
+      dtype: dtype ?? "q4",
+    }),
+    AutoProcessor.from_pretrained(modelId),
   ]);
+  if (!model) throw new Error("Failed to load model");
+  if (!processor) throw new Error("Failed to load processor");
 }
 
 export interface PrefetchCallbacks {
   onProgress: (progress: DownloadProgress) => void;
+  onPhase?: (phase: "downloading" | "loading") => void;
   signal?: AbortSignal;
 }
 
 export async function prefetchModel(
   modelId: string,
-  { onProgress, signal }: PrefetchCallbacks
+  { onProgress, onPhase, signal }: PrefetchCallbacks
 ): Promise<void> {
-  const files = await listModelFiles(modelId, signal);
+  const info = getModelInfo(modelId);
+  const patterns = info?.filePatterns ?? [];
+  if (patterns.length === 0) {
+    throw new Error(`No file list defined for model ${modelId}`);
+  }
+  const files = await listModelFiles(modelId, patterns, signal);
   if (files.length === 0) {
     throw new Error("No model files found in the repository");
   }
+  onPhase?.("downloading");
   await downloadModelFiles(
     modelId,
     files,
     onProgress,
     signal ?? new AbortController().signal
   );
-  await loadPrefetchedModel(modelId);
+  onPhase?.("loading");
+  await loadPrefetchedModel(modelId, info?.dtype);
 }
 
 export function formatBytes(bytes: number): string {

@@ -1,5 +1,6 @@
 import type { AppSettings, ProviderConfig } from "./types";
 import { defaultProviderConfigs, DEFAULT_WEBGPU_MODEL } from "./providers/defaults";
+import { WEBGPU_MODELS } from "./model-catalog";
 
 const STORAGE_KEY = "they-see-your-photo:settings";
 
@@ -20,11 +21,15 @@ export function loadSettings(): AppSettings {
     if (!raw) return defaultSettings();
     const parsed = JSON.parse(raw) as Partial<AppSettings>;
     const defaults = defaultSettings();
-    return {
+    const merged: AppSettings = {
       ...defaults,
       ...parsed,
       providerConfigs: { ...defaults.providerConfigs, ...(parsed.providerConfigs ?? {}) },
     };
+    if (!WEBGPU_MODELS.some((m) => m.id === merged.webgpuModelId)) {
+      merged.webgpuModelId = DEFAULT_WEBGPU_MODEL;
+    }
+    return merged;
   } catch {
     return defaultSettings();
   }
