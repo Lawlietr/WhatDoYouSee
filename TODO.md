@@ -349,10 +349,10 @@ usePhotoAnalysis
 
 ### Step 7.6: Prompt & Data-Table Refinement (based on original site's depth)
 - Observation: the original site's analysis reaches much deeper inferences — personal interests, estimated income, religion, brands of bags/clothing, etc. The current system prompt is generic ("location, time, devices, activities, relationships, socioeconomic status, habits").
-- [ ] Enrich `src/lib/providers/system-prompt.ts`: explicitly prompt the model to speculate on lifestyle, income bracket, personal interests/hobbies, religion/ethnic signals (when visible), brand/logo identification, and habits — each marked as speculative
-- [ ] Define a richer data-table schema in the prompt (grouped categories: Location / Time / Person / Socioeconomic / Devices / Brands / Relationships / Inferred Habits) so the table is consistent across runs
-- [ ] Note: the 450M model cannot follow the JSON-only output requirement (it returns prose; handled by `parseAnalysisResilient` in `providers/utils.ts`). For full table output the user needs 3B or a stronger backend model (Qwen3.5-9B-VL already returns 2 paragraphs + 9-row table)
-- [ ] Re-test prompt with both WebGPU 450M/3B and the user's llama-server (Qwen3.5-9B-VL) and adjust wording accordingly
+- [x] Enriched `src/lib/providers/system-prompt.ts` (2026-09): per-person appearance, personality/interests, income bracket, brands per item, culture/beliefs (religion/politics/orientation — visible evidence only, omit otherwise), multi-person relationships, habits; every table value carries a `[certain]/[likely]/[speculative]` confidence tag; anti-hallucination clause; hard conciseness rules (≤12-word values, 3–5 short paragraphs) per owner observation that the original site is dense, not verbose
+- [x] Grouped table schema defined: FLAT keys `"Group: item"` (Location / Time / People / Personality & Interests / Socioeconomic / Culture & Beliefs / Brands / Relationships / Habits) — flat so weak models + existing parsers keep working; `DataTableView` renders groups as titled sections + colored confidence tags, non-conforming keys degrade to the flat grid
+- [ ] Note: 450M is out of quality scope (owner 2026-09: it exists only to prove WebGPU works; prose-only output is expected). Bigger WebGPU models (e.g. Qwen2.5-VL 2B/4B) are a later OPTIONAL add. Full table output needs a strong backend — Qwen3.6-35B-VL / Gemma4-12B confirmed working by owner
+- [ ] Owner test (deployed): same photo before/after on one strong model; check all 9 groups appear when evidence exists, confidence tags present, output stays concise; report missing groups / shallow / hallucinated items
 
 ### Step 7.7: [OPTIONAL] Reverse geocoding (map address display) — nice-to-have, not required
 - Decision (owner, 2026-09): the map marker alone is considered sufficient; this is a **nice-to-have**, not a launch requirement. Implement only if time permits or a user asks for it.
