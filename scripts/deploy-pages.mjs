@@ -124,7 +124,12 @@ if (!exists) {
 }
 
 // 5. Deploy the static export.
-run(`npx wrangler pages deploy ${JSON.stringify(OUT_DIR)} --project-name=${TARGET.name}`);
+//    --branch main forces a PRODUCTION deployment of the target project
+//    regardless of the local git branch: without it, deploying from a
+//    non-production branch (e.g. DEV) creates a PREVIEW deployment that the
+//    custom domain / project root URL never serve (they only point at
+//    production deployments).
+run(`npx wrangler pages deploy ${JSON.stringify(OUT_DIR)} --project-name=${TARGET.name} --branch main`);
 
 // 6. Custom domains for the target project (one-time; idempotent). wrangler
 //    CLI has no pages-domain command, so this goes through the REST API
