@@ -280,11 +280,16 @@ No `.env` files. All runtime configuration lives in the browser:
 
 ### Deploy to Cloudflare Pages
 
-1. Run `npm run build` to generate `/out` directory
-2. Install wrangler: `npm install -g wrangler`
-3. Authenticate: `wrangler login`
-4. Deploy: `wrangler pages deploy ./out --project-name=what-do-you-see`
-5. Verify at `https://what-do-you-see.pages.dev`
+One command (builds the static export, verifies `/out`, creates the project if missing, deploys production, and ensures the custom domain):
+
+```bash
+node scripts/deploy-pages.mjs           # full deploy incl. custom domain
+node scripts/deploy-pages.mjs --no-domain  # skip the domain step
+```
+
+- **Secrets policy:** `scripts/deploy-pages.mjs` contains NO credentials. wrangler reads `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` from the environment; the script refuses to run if either is missing and never prints their values. No `wrangler login` needed.
+- Project: `what-do-you-see` → `https://what-do-you-see.pages.dev`; custom domain `wdus.avpclub.eu.org` (zone `avpclub.eu.org` is proxied through Cloudflare, so the CNAME is API-managed and the TLS cert is auto-issued).
+- If a local `next start` is serving on 3103, restart it after the deploy (the script prints a warning).
 
 ### Deploy to HF Static Spaces
 

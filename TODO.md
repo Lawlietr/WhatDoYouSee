@@ -354,9 +354,10 @@ usePhotoAnalysis
 - [ ] Note: the 450M model cannot follow the JSON-only output requirement (it returns prose; handled by `parseAnalysisResilient` in `providers/utils.ts`). For full table output the user needs 3B or a stronger backend model (Qwen3.5-9B-VL already returns 2 paragraphs + 9-row table)
 - [ ] Re-test prompt with both WebGPU 450M/3B and the user's llama-server (Qwen3.5-9B-VL) and adjust wording accordingly
 
-### Step 7.7: Wire up reverse geocoding (map address display)
-- Current gap: `GET /api/reverse-geocode` (Nominatim) exists in Phase 2 but the UI never calls it — the map shows a marker only, no address.
-- Plan (decided, not yet implemented):
+### Step 7.7: [OPTIONAL] Reverse geocoding (map address display) — nice-to-have, not required
+- Decision (owner, 2026-09): the map marker alone is considered sufficient; this is a **nice-to-have**, not a launch requirement. Implement only if time permits or a user asks for it.
+- Current state: `GET /api/reverse-geocode` (Nominatim) exists in Phase 2 but the UI never calls it.
+- Plan (if implemented):
   - Show the resolved address next to/below the map when GPS is present
   - **Self-hosted build**: call the existing `/api/reverse-geocode` proxy (keeps the in-memory cache)
   - **Static export (Cloudflare/HF)**: API routes don't exist — call Nominatim directly from the browser (`format=jsonv2`); this is a user-initiated request the user explicitly made by uploading a photo with GPS, consistent with the privacy policy; respect Nominatim usage policy (browser sends Referer automatically)
@@ -401,12 +402,10 @@ usePhotoAnalysis
 - [ ] Note: self-hosted (with API routes) uses `npm run build && npm start`, NOT `build:export`
 
 ### Step 8.2: Cloudflare Pages (Recommended)
-- [ ] Install wrangler: `npm install -g wrangler`
-- [ ] Authenticate: `wrangler login`
-- [ ] Deploy: `wrangler pages deploy ./out --project-name=they-see-your-photo`
-- [ ] Verify: `https://they-see-your-photo.pages.dev`
-- [ ] Optional: connect custom domain in Cloudflare dashboard
-- [ ] Set up GitHub integration for auto-deploy on push (optional)
+- [x] One-command deploy script: `scripts/deploy-pages.mjs` (build:export → verify /out → ensure project → production deploy → ensure custom domain; refuses to run without `CLOUDFLARE_API_TOKEN`+`CLOUDFLARE_ACCOUNT_ID` in the environment; contains no credentials; `--no-domain` flag skips the domain step)
+- [ ] First deploy: run `node scripts/deploy-pages.mjs` (creates project `what-do-you-see` + attaches `wdus.avpclub.eu.org` — the zone is already proxied through Cloudflare, so no eu.org DNS panel work is needed)
+- [ ] Verify: `https://what-do-you-see.pages.dev` and `https://wdus.avpclub.eu.org` (home page, example photos, 404, WebGPU in a real browser, API mode against the user's llama-server)
+- [ ] Optional: set up GitHub integration for auto-deploy on push (note: `npm run build:export` semantics must be preserved in the CI build step)
 
 ### Step 8.3: HF Static Spaces (Alternative)
 - [ ] Create HF Static Space repo
@@ -519,5 +518,5 @@ types.ts
 | Phase 4: Settings UI | ✅ Done (4.1–4.7) | ed31d8f; settings drawer, provider selector/config, connection test, WebGPU model mgmt + download progress |
 | Phase 5: Settings Hooks | ✅ Done (5.1–5.5) | useSettings/useProvider/useModelDownload/useWebGPU/usePhotoAnalysis; webgpu per-model pipelines; llama-server API-key support |
 | Phase 6: Main Page | ✅ Done (6.1–6.3) | page.tsx hero + two-column assembly, AppProviders, llama-server /v1 auto-normalize + API-key detect, Playwright E2E 15/15 |
-| Phase 7: Testing | 🔄 In progress | 7.1 mostly verified (WebGPU + API + download + settings + map both directions); pending: EXIF format matrix, mobile responsive, 7.5 example photos, 7.6 prompt/table refinement, 7.7 reverse-geocode wiring |
+| Phase 7: Testing | 🔄 In progress | 7.1 mostly verified (WebGPU + API + download + settings + map both directions); 7.5 example photos done; pending: EXIF format matrix, mobile responsive, 7.6 prompt/table refinement; 7.7 reverse-geocode is OPTIONAL (owner: marker alone is sufficient) |
 | Phase 8: Deployment | ⏸ Deferred | Local production verification first (8.0); Cloudflare Pages best-effort, skippable if it can't serve normal functionality |
