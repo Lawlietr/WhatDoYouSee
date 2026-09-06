@@ -9,6 +9,7 @@ import type {
 import { PRIVACY_ANALYSIS_SYSTEM_PROMPT, buildUserPrompt } from "./system-prompt";
 import { parseAnalysisResilient } from "./utils";
 import { getModelInfo } from "../model-catalog";
+import { cachedModelState } from "../model-cache";
 import { DEFAULT_WEBGPU_MODEL } from "./defaults";
 import { isWebGpuSupported as checkGpu } from "./webgpu-support";
 
@@ -54,6 +55,12 @@ async function loadPipeline(modelId: string): Promise<VlPipeline> {
   const existing = pipelines.get(modelId);
   if (existing) return existing;
   const promise = (async () => {
+    const status = await cachedModelState(modelId);
+    if (!status.cached) {
+      throw new Error(
+        `Model "${modelId}" is not downloaded. Models are never downloaded automatically — open Settings → WebGPU → "Manage models" and download it first.`,
+      );
+    }
     const { AutoModelForImageTextToText, AutoProcessor, env } = await loadTransformers();
     env.allowLocalModels = false;
     const info = getModelInfo(modelId);

@@ -111,11 +111,14 @@ export function ModelDownloadDialog({
         {selected && (
           <Button
             variant="contained"
-            disabled={selected.id === currentModelId}
-            onClick={() => onConfirm(selected)}
+            onClick={() =>
+              selected.id === currentModelId && cachedIds.includes(selected.id)
+                ? onClose()
+                : onConfirm(selected)
+            }
           >
-            {selected.id === currentModelId
-              ? "Current model"
+            {selected.id === currentModelId && cachedIds.includes(selected.id)
+              ? "Done"
               : cachedIds.includes(selected.id)
                 ? "Use this model"
                 : `Download (${formatBytes(selected.sizeBytes)})`}

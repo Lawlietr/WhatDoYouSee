@@ -19,6 +19,7 @@ import {
   clearWebGpuModelCache,
   formatBytes,
   prefetchModel,
+  type CacheStatus,
 } from "../../lib/model-cache";
 import { WEBGPU_MODELS, getModelInfo } from "../../lib/model-catalog";
 import { ModelDownloadDialog } from "../ModelDownloadDialog";
@@ -29,11 +30,10 @@ interface WebGPUSettingsProps {
   onModelChange: (modelId: string) => void;
 }
 
-async function computeCacheMap(): Promise<Record<string, { bytes: number }>> {
-  const next: Record<string, { bytes: number }> = {};
+async function computeCacheMap(): Promise<Record<string, CacheStatus>> {
+  const next: Record<string, CacheStatus> = {};
   for (const model of WEBGPU_MODELS) {
-    const status = await cachedModelState(model.id);
-    if (status.bytes > 0) next[model.id] = { bytes: status.bytes };
+    next[model.id] = await cachedModelState(model.id);
   }
   return next;
 }
@@ -41,7 +41,7 @@ async function computeCacheMap(): Promise<Record<string, { bytes: number }>> {
 export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) {
   const [support, setSupport] = useState<"checking" | "yes" | "no">("checking");
   const isSecureContext = typeof window === "undefined" ? true : window.isSecureContext;
-  const [cached, setCached] = useState<Record<string, { bytes: number }>>({});
+  const [cached, setCached] = useState<Record<string, CacheStatus>>({});
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
@@ -118,7 +118,9 @@ export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) 
   };
 
   const info = getModelInfo(modelId);
-  const modelCached = cached[modelId];
+  const modelStatus = cached[modelId];
+  const modelCached = modelStatus?.cached ? modelStatus : undefined;
+  const completeIds = Object.keys(cached).filter((id) => cached[id]?.cached);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -155,7 +157,13 @@ export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) 
           {info?.name ?? modelId}
         </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-          Status: {modelCached ? `Downloaded (${formatBytes(modelCached.bytes)} cached)` : "Not downloaded"}
+          Status: {
+            modelCached
+              ? `Downloaded (${formatBytes(modelCached.bytes)} cached)`
+              : modelStatus?.bytes > 0
+                ? `Partially downloaded (${formatBytes(modelStatus.bytes)} of required files) — re-download to complete`
+                : "Not downloaded"
+          }
         </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
           Cache location: this browser (Cache API + IndexedDB)
@@ -189,9 +197,9 @@ export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) 
         open={dialogOpen}
         models={WEBGPU_MODELS}
         currentModelId={modelId}
-        cachedIds={Object.keys(cached)}
+        cachedIds={completeIds}
         onConfirm={(model) => {
-          if (cached[model.id]) {
+          if (cached[model.id]?.cached) {
             onModelChange(model.id);
             setDialogOpen(false);
           } else {
