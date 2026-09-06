@@ -106,26 +106,37 @@ Shared provider helpers: `src/lib/providers/system-prompt.ts` (privacy analysis 
 
 ## System Prompt (Privacy Analysis)
 
-Used by both WebGPU and llama-server providers. **Refined in Step 7.6 (2026-09):** the prompt now targets the depth of the original ENTE-style analysis — location, per-person appearance, personality/interests, income bracket, brands per item, culture/beliefs (religion, political leaning, orientation — only with visible evidence), multi-person relationships, habits — with hard conciseness rules (table values ≤ 12 words, 3–5 short paragraphs; "short and dense beats long") because the original site's killer trait is many inferences without verbosity.
+Used by both WebGPU and llama-server providers. **Status:** the Step 7.6 deep-enrichment prompt (9-group table schema + confidence tags) was deployed 2026-09 but REVERTED after owner testing — on strong backends (Gemma4-12B / Qwen3.6-35B-VL) the model stopped performing location analysis. The original generic prompt (below) is restored as the production prompt; a more conservative 7.6 iteration (enrich without changing the baseline behavior, ideally verified against the original site's output) is still planned.
 
-**Output contract:** JSON `{paras, table}` where `table` is a FLAT object whose keys are `"Group: item"` (groups: Location / Time / People / Personality & Interests / Socioeconomic / Culture & Beliefs / Brands / Relationships / Habits) and every value is prefixed with a confidence tag `[certain]` / `[likely]` / `[speculative]`. Flat-on-purpose: nested objects would break weak-model instruction following and the existing parsers. `DataTableView` groups cells by the key prefix (case-insensitive, canonical names from `TABLE_GROUPS`) and colors the confidence tag (green/blue/orange); tables without the prefix render as a flat grid, so non-conforming models degrade gracefully.
+```
+You are an AI assistant that analyzes photos and infers what private information an observer could gather. Based on the image, provide your analysis in the following JSON format:
 
-```json
 {
-  "paras": ["Short paragraph of inferences."],
+  "paras": [
+    "Paragraph 1: Detailed observation about what can be inferred...",
+    "Paragraph 2: Additional inferences..."
+  ],
   "table": {
-    "Location: place": "[certain] Eiffel Tower, Paris, France",
-    "Socioeconomic: income": "[speculative] upper-middle income bracket"
+    "Category": "Inferred detail",
+    "Another Category": "Another inferred detail"
   }
 }
+
+Guidelines:
+- Describe what a person looking at this photo could learn about the subject
+- Include inferences about: location, time, devices, activities, relationships, socioeconomic status, habits
+- Be specific but speculative — note when you are guessing vs. certain
+- Consider EXIF metadata if available (date, GPS, camera model)
+- Do NOT identify specific individuals by name
+- Output ONLY the JSON, no extra text
 ```
 
-The full prompt text lives in `src/lib/providers/system-prompt.ts` (single source of truth; this section summarizes it). Anti-hallucination clause: infer ONLY what the image gives a signal for; omit groups without evidence; never identify real people by name. User testing status: 7.6 wording pending owner test on Qwen3.6-35B-VL / Gemma4-12B (owner preference: 450M quality is out of scope — it exists only to prove WebGPU works; bigger WebGPU models like Qwen2.5-VL 2B/4B are a later optional add).
+Testing scope note (owner): 450M WebGPU model quality is out of scope (it exists only to prove WebGPU works); prompt iterations are judged on strong backends (Qwen3.6-35B-VL / Gemma4-12B).
 
 ## Known Gaps (to be closed before launch)
 
 1. ~~Example photos are placeholders~~ — **done**: 4 real Pexels photos in `public/examples/` (free Pexels License; credits in `public/examples/CREDITS.md`, also shown under each thumbnail).
-2. **7.6 prompt refinement awaiting owner test** — the enriched prompt + grouped table schema is implemented and deployed; owner verification on strong backends (Qwen3.6-35B-VL, Gemma4-12B) is the remaining gate (TODO.md Step 7.6).
+2. **System prompt too shallow (7.6 reopened)** — the first enrichment attempt (grouped table + confidence tags, deployed 2026-09) was reverted: owner testing on strong models showed location analysis regressed to zero. Next iteration must preserve the baseline (location first) while adding depth (TODO.md Step 7.6).
 3. **Reverse geocoding not wired** — `/api/reverse-geocode` exists but the UI never calls it; address display near the map is planned (TODO.md Step 7.7).
 4. **WebGPU 450M = prose only** — works (user-verified) but cannot produce the JSON table; 3B or the user's llama-server backend is needed for full structured output.
 5. **Deployment deferred** — local production (`npm run build && npm start`) must be verified first; Cloudflare Pages is best-effort afterwards and may be skipped (TODO.md Phase 8.0).
