@@ -8,13 +8,14 @@ interface Example {
   file: string;
   src: string;
   label: string;
+  credit: string;
 }
 
 const EXAMPLES: Example[] = [
-  { file: "street.png", src: "/examples/street.png", label: "Street at dusk" },
-  { file: "interior.png", src: "/examples/interior.png", label: "Apartment interior" },
-  { file: "outdoors.png", src: "/examples/outdoors.png", label: "Hiking trail" },
-  { file: "selfie.png", src: "/examples/selfie.png", label: "Café selfie" },
+  { file: "street.jpg", src: "/examples/street.jpg", label: "Shibuya at night", credit: "Kyle Kroeger · Pexels" },
+  { file: "interior.jpg", src: "/examples/interior.jpg", label: "Studio workspace", credit: "Andrea Piacquadio · Pexels" },
+  { file: "outdoors.jpg", src: "/examples/outdoors.jpg", label: "Alpine hike", credit: "Yaroslav Shuraev · Pexels" },
+  { file: "selfie.jpg", src: "/examples/selfie.jpg", label: "Café afternoon", credit: "Edmond Dantès · Pexels" },
 ];
 
 interface ExamplePhotosProps {
@@ -31,7 +32,7 @@ export function ExamplePhotos({ onPhotoSelected }: ExamplePhotosProps) {
       const response = await fetch(example.src);
       if (!response.ok) throw new Error(`Failed to load ${example.src}`);
       const blob = await response.blob();
-      const file = new File([blob], example.file, { type: blob.type || "image/png" });
+      const file = new File([blob], example.file, { type: blob.type || "image/jpeg" });
       onPhotoSelected(file);
     } catch {
       setLoadingFile(null);
@@ -95,6 +96,9 @@ export function ExamplePhotos({ onPhotoSelected }: ExamplePhotosProps) {
               }}
             >
               <Typography variant="caption">{example.label}</Typography>
+              <Typography variant="caption" color="text.disabled" sx={{ display: "block" }}>
+                {example.credit}
+              </Typography>
             </Box>
             {loadingFile === example.file && (
               <Box

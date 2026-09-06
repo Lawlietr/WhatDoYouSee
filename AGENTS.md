@@ -131,7 +131,7 @@ Guidelines:
 
 ## Known Gaps (to be closed before launch)
 
-1. **Example photos are placeholders** — the 4 images in `public/examples/` are program-generated gradients (AI analysis of them is meaningless). Swap for up to 4 real photos from a free-license stock source (Unsplash/Pexels/Pixabay/Flickr CC), keeping attribution (TODO.md Step 7.5).
+1. ~~Example photos are placeholders~~ — **done**: 4 real Pexels photos in `public/examples/` (free Pexels License; credits in `public/examples/CREDITS.md`, also shown under each thumbnail).
 2. **System prompt too shallow** — original site infers interests, income, religion, brands, etc. Prompt + table schema refinement is planned (TODO.md Step 7.6).
 3. **Reverse geocoding not wired** — `/api/reverse-geocode` exists but the UI never calls it; address display near the map is planned (TODO.md Step 7.7).
 4. **WebGPU 450M = prose only** — works (user-verified) but cannot produce the JSON table; 3B or the user's llama-server backend is needed for full structured output.
