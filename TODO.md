@@ -406,7 +406,16 @@ usePhotoAnalysis
 - [x] First deploy: done (2026-09) — project `what-do-you-see` created, production deployed, `wdustesting.avpclub.eu.org` attached via `POST .../pages/projects/{project}/domains` (body `{"name": ...}`; the legacy `/custom-domains` endpoint was removed from the public API and wrangler CLI has no domain command — this is why the script calls the REST API directly)
 - [x] Verified serving: home 200 (new name, 0 old-name hits), example photo 200, 404 page 404
 - [x] Verify in a real browser (2026-09, owner): WebGPU 450M and API mode (Gemma4-12B thinking model) both verified working on the live site
+- [x] Two-project test/prod split (2026-09, owner policy): `wdustesting` moved to a new project `what-do-you-see-test`; a Pages deployment updates ALL domains of its project, so the test and production domains now live in separate projects. Script default = test project; `--prod` = production (`wdus`) — production is only deployed on explicit owner request.
+- [x] `--branch main` fix (2026-09): deploying from a non-production git branch (DEV) made wrangler create a PREVIEW deployment that the custom domain never served (stale prod bundle kept showing). The script now passes `--branch main` so every deploy is a production deployment of the target project regardless of local branch.
+- [x] Production promotion (2026-09, owner-requested): `node scripts/deploy-pages.mjs --prod` — `wdus.avpclub.eu.org` now serves the same DEV-branch build as the test site (verified via served-bundle inspection: no-silent-download gate present, 450M default, 450M→3B order)
 - [ ] Optional: set up GitHub integration for auto-deploy on push (note: `npm run build:export` semantics must be preserved in the CI build step)
+
+### Post-deployment fixes (2026-09, DEV branch)
+- [x] WebGPU default model changed to the smallest (`LiquidAI/LFM2.5-VL-450M-ONNX`); UI model list ordered smallest→largest (450M → 3B)
+- [x] `LiquidAI/LFM2.5-VL-1.6B-ONNX` verified UNUSABLE and intentionally not catalogued: its ONNX files are named `decoder_*`/`embed_images_*`, which do not match the transformers.js 4.2.0 `ImageTextToText` session keys (`embed_tokens`/`decoder_model_merged`/`vision_encoder`) — cannot load
+- [x] One-time settings migration: browsers that stored the old default (3B) are migrated to the new default (450M) on first load, gated by a localStorage flag so a later explicit 3B choice is respected
+- [x] No silent model downloads: inference gates on `cachedModelState` and fails fast with a pointer to Settings when the model is not fully cached (`from_pretrained` can no longer fetch on demand); dialog action button driven by download state (Download / Use this model / Done — the current model previously had no download button); partial caches are labelled and re-downloadable
 
 ### Step 8.3: HF Static Spaces (Alternative)
 - [ ] Create HF Static Space repo
