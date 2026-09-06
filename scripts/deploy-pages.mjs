@@ -17,8 +17,25 @@ import fs from "node:fs";
 import path from "node:path";
 
 const PROJECT = "what-do-you-see";
-const DOMAIN = "wdus.avpclub.eu.org";
+const ZONE = "avpclub.eu.org";
+const DOMAIN = "wdustesting.avpclub.eu.org";
 const OUT_DIR = path.resolve(process.cwd(), "out");
+
+async function cf(endpoint, init = {}) {
+  const res = await fetch(`https://api.cloudflare.com/client/v4/${endpoint}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+      "Content-Type": "application/json",
+      ...init.headers,
+    },
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(`${res.status} ${JSON.stringify(body.errors ?? body.message ?? "")}`);
+  }
+  return body;
+}
 
 const skipDomain = process.argv.includes("--no-domain");
 
@@ -92,17 +109,58 @@ if (!exists) {
 // 5. Deploy the static export to production.
 run(`npx wrangler pages deploy ${JSON.stringify(OUT_DIR)} --project-name=${PROJECT}`);
 
-// 6. Custom domain (one-time; idempotent — a failure only means it is likely
-//    already attached, so this step is non-fatal).
+// 6. Custom domain (one-time; idempotent). wrangler CLI has no pages-domain
+//    command, so this goes through the REST API directly (token from env).
+//    Endpoint: POST /accounts/{acct}/pages/projects/{project}/domains with
+//    body {"name": "<domain>"} ("name", not "domain" — the legacy
+//    /custom-domains endpoint was removed from the public API).
+//    Zone is on Cloudflare nameservers, so a proxied CNAME to the pages.dev
+//    alias is enough for Cloudflare to verify + issue the TLS certificate.
 if (!skipDomain) {
   console.log(`\nEnsuring custom domain ${DOMAIN} (no-op if already attached):`);
   try {
-    run(`npx wrangler pages domain add ${DOMAIN} --project-name=${PROJECT}`);
-  } catch {
+    const acctId = process.env.CLOUDFLARE_ACCOUNT_ID;
+    const projBase = `accounts/${acctId}/pages/projects/${PROJECT}`;
+
+    const zoneRes = await cf(`zones?status=active&name=${ZONE}`);
+    const zone = zoneRes.result?.[0];
+    if (!zone) throw new Error(`zone ${ZONE} not found in this account`);
+
+    const listed = await cf(`${projBase}/domains`);
+    const domains = listed.result ?? [];
+    const existing = domains.find((d) => d.name === DOMAIN);
+
+    if (!existing) {
+      const recs = await cf(`zones/${zone.id}/dns_records?name=${DOMAIN}`);
+      const rec = recs.result[0];
+      const target = `${PROJECT}.pages.dev`;
+      if (rec?.type === "CNAME" && rec?.content === target) {
+        console.log("  DNS CNAME already in place.");
+      } else if (rec) {
+        await cf(`zones/${zone.id}/dns_records/${rec.id}`, {
+          method: "PUT",
+          body: JSON.stringify({ type: "CNAME", content: target, proxied: true }),
+        });
+        console.log(`  Replaced existing record ${rec.type} -> CNAME ${target} (proxied).`);
+      } else {
+        await cf(`zones/${zone.id}/dns_records`, {
+          method: "POST",
+          body: JSON.stringify({ type: "CNAME", name: DOMAIN, content: target, proxied: true, ttl: 1 }),
+        });
+        console.log(`  Created CNAME ${DOMAIN} -> ${target} (proxied).`);
+      }
+      const add = await cf(`${projBase}/domains`, {
+        method: "POST",
+        body: JSON.stringify({ name: DOMAIN }),
+      });
+      console.log(`  Attached domain (status: ${add.result?.status ?? "?"}).`);
+    } else {
+      console.log(`  Already attached (status: ${existing.status}).`);
+    }
+  } catch (e) {
     console.warn(
-      `  Could not (re-)attach ${DOMAIN} via API — it is probably already\n` +
-        "  attached, or the token lacks the Pages Domains permission. Check the\n" +
-        "  dashboard if the domain is not serving yet.",
+      `  Custom-domain step failed: ${e.message}\n` +
+        "  Check the Cloudflare dashboard if the domain is not serving yet.",
     );
   }
 }

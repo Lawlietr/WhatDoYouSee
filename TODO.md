@@ -403,8 +403,9 @@ usePhotoAnalysis
 
 ### Step 8.2: Cloudflare Pages (Recommended)
 - [x] One-command deploy script: `scripts/deploy-pages.mjs` (build:export → verify /out → ensure project → production deploy → ensure custom domain; refuses to run without `CLOUDFLARE_API_TOKEN`+`CLOUDFLARE_ACCOUNT_ID` in the environment; contains no credentials; `--no-domain` flag skips the domain step)
-- [ ] First deploy: run `node scripts/deploy-pages.mjs` (creates project `what-do-you-see` + attaches `wdus.avpclub.eu.org` — the zone is already proxied through Cloudflare, so no eu.org DNS panel work is needed)
-- [ ] Verify: `https://what-do-you-see.pages.dev` and `https://wdus.avpclub.eu.org` (home page, example photos, 404, WebGPU in a real browser, API mode against the user's llama-server)
+- [x] First deploy: done (2026-09) — project `what-do-you-see` created, production deployed, `wdustesting.avpclub.eu.org` attached via `POST .../pages/projects/{project}/domains` (body `{"name": ...}`; the legacy `/custom-domains` endpoint was removed from the public API and wrangler CLI has no domain command — this is why the script calls the REST API directly)
+- [x] Verified serving: home 200 (new name, 0 old-name hits), example photo 200, 404 page 404
+- [ ] Verify in a real browser: WebGPU (secure context over HTTPS is now guaranteed by CF) + API mode against the user's llama-server
 - [ ] Optional: set up GitHub integration for auto-deploy on push (note: `npm run build:export` semantics must be preserved in the CI build step)
 
 ### Step 8.3: HF Static Spaces (Alternative)

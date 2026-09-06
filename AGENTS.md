@@ -288,7 +288,7 @@ node scripts/deploy-pages.mjs --no-domain  # skip the domain step
 ```
 
 - **Secrets policy:** `scripts/deploy-pages.mjs` contains NO credentials. wrangler reads `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` from the environment; the script refuses to run if either is missing and never prints their values. No `wrangler login` needed.
-- Project: `what-do-you-see` → `https://what-do-you-see.pages.dev`; custom domain `wdus.avpclub.eu.org` (zone `avpclub.eu.org` is proxied through Cloudflare, so the CNAME is API-managed and the TLS cert is auto-issued).
+- Project: `what-do-you-see` → `https://what-do-you-see.pages.dev`; custom domain `wdustesting.avpclub.eu.org` (zone `avpclub.eu.org` is proxied through Cloudflare). The domain step uses the REST API directly — `POST /accounts/{acct}/pages/projects/{project}/domains` with body `{"name": "<domain>"}` (field is `name`, NOT `domain`; the legacy `/custom-domains` endpoint is gone from the public API). CNAME is API-managed and the TLS cert is auto-issued; step is idempotent.
 - If a local `next start` is serving on 3103, restart it after the deploy (the script prints a warning).
 
 ### Deploy to HF Static Spaces
