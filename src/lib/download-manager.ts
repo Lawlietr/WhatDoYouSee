@@ -1,6 +1,6 @@
 import { openDB, type IDBPDatabase } from "idb";
 
-const DB_NAME = "they-see-your-photo";
+const DB_NAME = "what-do-you-see";
 const STORE_NAME = "models";
 const DB_VERSION = 1;
 

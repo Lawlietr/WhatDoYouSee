@@ -2,7 +2,7 @@ import type { AppSettings, ProviderConfig } from "./types";
 import { defaultProviderConfigs, DEFAULT_WEBGPU_MODEL } from "./providers/defaults";
 import { WEBGPU_MODELS } from "./model-catalog";
 
-const STORAGE_KEY = "they-see-your-photo:settings";
+const STORAGE_KEY = "what-do-you-see:settings";
 
 export function defaultSettings(): AppSettings {
   return {

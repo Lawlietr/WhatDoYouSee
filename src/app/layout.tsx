@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "They See Your Photo",
+  title: "What Do You See?",
   description:
     "Upload a photo and see what an observer can infer about you. All analysis runs locally.",
 };

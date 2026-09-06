@@ -59,7 +59,7 @@ export default function Home() {
       >
         <Box>
           <Typography variant="h6" sx={{ lineHeight: 1.2 }}>
-            They See Your Photo
+            What Do You See?
           </Typography>
           <Typography variant="caption" color="text.secondary">
             Local, privacy-first photo analysis

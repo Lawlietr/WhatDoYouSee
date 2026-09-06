@@ -7,7 +7,7 @@ interface AddressResult {
 const cache = new Map<string, AddressResult>();
 
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/reverse";
-const USER_AGENT = "they-see-your-photo (local privacy tool)";
+const USER_AGENT = "what-do-you-see (local privacy tool)";
 
 function toResult(place: {
   display_name?: string;

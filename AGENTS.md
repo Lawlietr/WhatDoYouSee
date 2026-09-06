@@ -1,11 +1,13 @@
-# AGENTS.md — They See Your Photo (Local Clone)
+# AGENTS.md — WhatDoYouSee
 
 ## Project Overview
 
-A local, privacy-first clone of [theyseeyourphotos.com](https://theyseeyourphotos.com/).
+A local, privacy-first photo-privacy analysis tool, **inspired by ENTE's theyseeyourphotos service** (see README.md — keep the inspiration credit, and keep the project name distinct: **WhatDoYouSee**, never use the original service's name/branding).
 Upload a photo → AI analyzes what private information can be inferred → results shown as paragraphs + data table.
 
-**Key difference from original:** All data stays local. No third-party analytics, no tracking, no data collection.
+**Key difference from the original:** All data stays local. No third-party analytics, no tracking, no data collection.
+
+**License: AGPL-3.0-only** (LICENSE file, `license` field in package.json). The AI model weights (LiquidAI LFM2.5-VL) are licensed separately by their owners; example photos are Pexels License. The AGPL covers only this codebase.
 
 ## Tech Stack
 
@@ -223,8 +225,8 @@ npm run dev        # Full functionality with API routes
 ### Cloudflare Pages (Recommended for Public Demo)
 ```bash
 npm run build:export    # Static export to /out (API routes auto-excluded)
-npx wrangler pages deploy ./out --project-name=they-see-your-photo
-# Live at: https://they-see-your-photo.pages.dev
+npx wrangler pages deploy ./out --project-name=what-do-you-see
+# Live at: https://what-do-you-see.pages.dev
 ```
 - Free: unlimited bandwidth, 500 builds/month
 - Custom domain: free
@@ -281,15 +283,15 @@ No `.env` files. All runtime configuration lives in the browser:
 1. Run `npm run build` to generate `/out` directory
 2. Install wrangler: `npm install -g wrangler`
 3. Authenticate: `wrangler login`
-4. Deploy: `wrangler pages deploy ./out --project-name=they-see-your-photo`
-5. Verify at `https://they-see-your-photo.pages.dev`
+4. Deploy: `wrangler pages deploy ./out --project-name=what-do-you-see`
+5. Verify at `https://what-do-you-see.pages.dev`
 
 ### Deploy to HF Static Spaces
 
 1. Run `npm run build` to generate `/out` directory
 2. Create HF Static Space repo
 3. Upload `/out` contents to repo
-4. Verify at `https://huggingface.co/spaces/{username}/they-see-your-photo`
+4. Verify at `https://huggingface.co/spaces/{username}/what-do-you-see`
 
 <!-- BEGIN:nextjs-agent-rules -->
 
