@@ -1,10 +1,18 @@
 #!/usr/bin/env node
 
-// Deploy the latest static export to Cloudflare Pages (production).
+// Deploy the latest static export to Cloudflare Pages.
+//
+// Two-project policy (owner decision):
+//   - TEST (default): project "what-do-you-see-test" -> https://wdustesting.avpclub.eu.org
+//   - PROD (explicit --prod flag): project "what-do-you-see" -> https://wdus.avpclub.eu.org
+// Plain runs MUST NOT touch production: every Pages deployment updates ALL
+// domains attached to that project, so the two domains live in SEPARATE
+// projects. Deploy to test first; promote with --prod only on request.
 //
 // Usage:
-//   node scripts/deploy-pages.mjs            # build + deploy + ensure custom domain
-//   node scripts/deploy-pages.mjs --no-domain  # skip the custom-domain step
+//   node scripts/deploy-pages.mjs             # build + deploy to TEST (wdustesting)
+//   node scripts/deploy-pages.mjs --prod      # build + deploy to PROD (wdus)
+//   node scripts/deploy-pages.mjs --no-domain # skip the custom-domain step
 //
 // Secrets policy:
 //   This script contains NO credentials. wrangler reads CLOUDFLARE_API_TOKEN
@@ -16,9 +24,11 @@ import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-const PROJECT = "what-do-you-see";
 const ZONE = "avpclub.eu.org";
-const DOMAINS = ["wdus.avpclub.eu.org", "wdustesting.avpclub.eu.org"];
+const PROJECTS = {
+  test: { name: "what-do-you-see-test", domains: ["wdustesting.avpclub.eu.org"] },
+  prod: { name: "what-do-you-see", domains: ["wdus.avpclub.eu.org"] },
+};
 const OUT_DIR = path.resolve(process.cwd(), "out");
 
 async function cf(endpoint, init = {}) {
@@ -37,6 +47,8 @@ async function cf(endpoint, init = {}) {
   return body;
 }
 
+const isProd = process.argv.includes("--prod");
+const TARGET = isProd ? PROJECTS.prod : PROJECTS.test;
 const skipDomain = process.argv.includes("--no-domain");
 
 function run(cmd) {
@@ -48,6 +60,11 @@ function fail(msg) {
   console.error(`\nERROR: ${msg}`);
   process.exit(1);
 }
+
+console.log(
+  `\nTarget: ${isProd ? "PRODUCTION" : "TEST"} — project "${TARGET.name}" (${TARGET.domains.join(", ")})`,
+);
+if (isProd) console.log("  (production deploy requested via --prod)");
 
 // 0. Environment check — names only, values never touched or printed.
 const missing = ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"].filter(
@@ -93,33 +110,34 @@ const chunks = fs.existsSync(path.join(OUT_DIR, "_next", "static"))
 if (chunks.length === 0) fail("out/_next/static/chunks is empty — not deploying.");
 console.log(`\nVerified: out/index.html, out/404.html, ${chunks.length} static chunks.`);
 
-// 4. Ensure the Pages project exists (idempotent).
+// 4. Ensure the target Pages project exists (idempotent).
 const exists = execSync(
   `npx wrangler pages project list --json 2>/dev/null || echo '[]'`,
   { encoding: "utf8" },
 )
   .trim()
-  .includes(`"${PROJECT}"`);
+  .includes(`"${TARGET.name}"`);
 if (!exists) {
-  run(`npx wrangler pages project create ${PROJECT} --production-branch main`);
+  run(`npx wrangler pages project create ${TARGET.name} --production-branch main`);
 } else {
-  console.log(`\nPages project "${PROJECT}" already exists.`);
+  console.log(`\nPages project "${TARGET.name}" already exists.`);
 }
 
-// 5. Deploy the static export to production.
-run(`npx wrangler pages deploy ${JSON.stringify(OUT_DIR)} --project-name=${PROJECT}`);
+// 5. Deploy the static export.
+run(`npx wrangler pages deploy ${JSON.stringify(OUT_DIR)} --project-name=${TARGET.name}`);
 
-// 6. Custom domain (one-time; idempotent). wrangler CLI has no pages-domain
-//    command, so this goes through the REST API directly (token from env).
-//    Endpoint: POST /accounts/{acct}/pages/projects/{project}/domains with
-//    body {"name": "<domain>"} ("name", not "domain" — the legacy
-//    /custom-domains endpoint was removed from the public API).
-//    Zone is on Cloudflare nameservers, so a proxied CNAME to the pages.dev
-//    alias is enough for Cloudflare to verify + issue the TLS certificate.
+// 6. Custom domains for the target project (one-time; idempotent). wrangler
+//    CLI has no pages-domain command, so this goes through the REST API
+//    directly (token from env). Endpoint:
+//    POST /accounts/{acct}/pages/projects/{project}/domains with body
+//    {"name": "<domain>"} ("name", not "domain" — the legacy /custom-domains
+//    endpoint was removed from the public API). Zone is on Cloudflare
+//    nameservers, so a proxied CNAME to the project's pages.dev alias is
+//    enough for Cloudflare to verify + issue the TLS certificate.
 if (!skipDomain) {
   try {
     const acctId = process.env.CLOUDFLARE_ACCOUNT_ID;
-    const projBase = `accounts/${acctId}/pages/projects/${PROJECT}`;
+    const projBase = `accounts/${acctId}/pages/projects/${TARGET.name}`;
 
     const zoneRes = await cf(`zones?status=active&name=${ZONE}`);
     const zone = zoneRes.result?.[0];
@@ -127,9 +145,9 @@ if (!skipDomain) {
 
     const listed = await cf(`${projBase}/domains`);
     const attached = listed.result ?? [];
-    const target = `${PROJECT}.pages.dev`;
+    const target = `${TARGET.name}.pages.dev`;
 
-    for (const domain of DOMAINS) {
+    for (const domain of TARGET.domains) {
       console.log(`\nEnsuring custom domain ${domain} (no-op if already attached):`);
       const existing = attached.find((d) => d.name === domain);
       if (existing) {
@@ -167,8 +185,9 @@ if (!skipDomain) {
   }
 }
 
-console.log(`\nDeploy complete.`);
-console.log(`  Primary:  https://${PROJECT}.pages.dev`);
-if (!skipDomain) for (const d of DOMAINS) console.log(`  Custom:   https://${d} (after Cloudflare certificate issuance, a few minutes)`);
+console.log(`\nDeploy complete (${isProd ? "PRODUCTION" : "TEST"}).`);
+console.log(`  Primary:  https://${TARGET.name}.pages.dev`);
+for (const d of TARGET.domains) console.log(`  Custom:   https://${d}`);
+if (!isProd) console.log(`  (production https://wdus.avpclub.eu.org untouched — promote with --prod when satisfied)`);
 console.log(`\nSuggested smoke test: fetch the home page, one example photo, and /404, then`);
 console.log(`verify WebGPU + API mode in a real browser (https:// gives a secure context).`);

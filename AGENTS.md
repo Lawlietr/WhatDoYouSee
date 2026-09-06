@@ -247,14 +247,20 @@ npm run dev        # Full functionality with API routes
 
 ### Cloudflare Pages (Recommended for Public Demo)
 ```bash
-npm run build:export    # Static export to /out (API routes auto-excluded)
-npx wrangler pages deploy ./out --project-name=what-do-you-see
-# Live at: https://what-do-you-see.pages.dev
+node scripts/deploy-pages.mjs      # default: TEST — https://wdustesting.avpclub.eu.org
+node scripts/deploy-pages.mjs --prod  # PRODUCTION — https://wdus.avpclub.eu.org (only on owner request)
 ```
-- Free: unlimited bandwidth, 500 builds/month
-- Custom domain: free
+- **Two-project policy (owner decision):** every Pages deployment updates ALL domains attached to that project, so the test and production domains live in SEPARATE projects: `what-do-you-see-test` → `wdustesting.avpclub.eu.org` (testing) and `what-do-you-see` → `wdus.avpclub.eu.org` (production). **Default runs deploy to TEST only; never deploy to production unless the owner explicitly asks** (then pass `--prod`).
+- Free: unlimited bandwidth, 500 builds/month; custom domain free
 - API routes: NOT available (static only, API mode uses user's own server)
 - WebGPU mode: fully supported (runs in user's browser)
+- Both sites live; owner-verified WebGPU (450M) + API mode (Gemma4-12B) on them
+
+### Git Remotes & Push Policy
+- `forgejo` → `ssh://fg/lawliet/WhatDoYouSee.git` (Forgejo, private)
+- `github` → `git@github.com:Lawlietr/WhatDoYouSee.git` (GitHub)
+- **Every commit is pushed to BOTH remotes** (owner decision): `git push forgejo main && git push github main`
+- GitHub icon in the site header links to the GitHub repo (constant in `src/lib/site.ts`)
 
 ### Hugging Face Static Spaces
 ```bash
@@ -303,15 +309,17 @@ No `.env` files. All runtime configuration lives in the browser:
 
 ### Deploy to Cloudflare Pages
 
-One command (builds the static export, verifies `/out`, creates the project if missing, deploys production, and ensures the custom domain):
+One command (builds the static export, verifies `/out`, creates the target project if missing, deploys, and ensures its custom domain):
 
 ```bash
-node scripts/deploy-pages.mjs           # full deploy incl. custom domain
-node scripts/deploy-pages.mjs --no-domain  # skip the domain step
+node scripts/deploy-pages.mjs             # default = TEST (wdustesting) — use this for all routine deploys
+node scripts/deploy-pages.mjs --prod      # PRODUCTION (wdus) — ONLY when the owner explicitly asks
+node scripts/deploy-pages.mjs --no-domain # skip the domain step
 ```
 
+- **Two-project policy:** `what-do-you-see-test` → `wdustesting.avpclub.eu.org`; `what-do-you-see` → `wdus.avpclub.eu.org`. A Pages deployment updates every domain on its project, which is why the domains are split across two projects. Default runs must never touch production.
 - **Secrets policy:** `scripts/deploy-pages.mjs` contains NO credentials. wrangler reads `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` from the environment; the script refuses to run if either is missing and never prints their values. No `wrangler login` needed.
-- Project: `what-do-you-see` → `https://what-do-you-see.pages.dev`; custom domains (zone `avpclub.eu.org` is proxied through Cloudflare): **`wdus.avpclub.eu.org`** (primary) and **`wdustesting.avpclub.eu.org`** (testing) — both live, owner-verified. The domain step uses the REST API directly — `POST /accounts/{acct}/pages/projects/{project}/domains` with body `{"name": "<domain>"}` (field is `name`, NOT `domain`; the legacy `/custom-domains` endpoint is gone from the public API). CNAME is API-managed and the TLS cert is auto-issued; step is idempotent.
+- Domain step uses the REST API directly (zone `avpclub.eu.org` is proxied through Cloudflare): `POST /accounts/{acct}/pages/projects/{project}/domains` with body `{"name": "<domain>"}` (field is `name`, NOT `domain`; legacy `/custom-domains` endpoint gone). **Delete** a domain with `DELETE .../domains/{domain-name}` (the domain NAME, not the UUID — the UUID form 404s). CNAME must point to the owning project's `*.pages.dev` alias; TLS cert is auto-issued; all steps idempotent.
 - If a local `next start` is running (port 3000/3103), restart it after the deploy (the script prints a warning).
 
 ### Deploy to HF Static Spaces
