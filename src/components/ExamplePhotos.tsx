@@ -12,10 +12,10 @@ interface Example {
 }
 
 const EXAMPLES: Example[] = [
-  { file: "street.jpg", src: "/examples/street.jpg", label: "Shibuya at night", credit: "Kyle Kroeger · Pexels" },
-  { file: "interior.jpg", src: "/examples/interior.jpg", label: "Studio workspace", credit: "Andrea Piacquadio · Pexels" },
-  { file: "outdoors.jpg", src: "/examples/outdoors.jpg", label: "Alpine hike", credit: "Yaroslav Shuraev · Pexels" },
-  { file: "selfie.jpg", src: "/examples/selfie.jpg", label: "Café afternoon", credit: "Edmond Dantès · Pexels" },
+  { file: "parade.jpg", src: "/examples/parade.jpg", label: "Street parade", credit: "Klub Boks · Pexels" },
+  { file: "family.jpg", src: "/examples/family.jpg", label: "Family gathering", credit: "Raymond Ma Yi Rong · Pexels" },
+  { file: "walk.jpg", src: "/examples/walk.jpg", label: "A tree-lined walk", credit: "Hsing Chi Fang · Pexels" },
+  { file: "family-bed.jpg", src: "/examples/family-bed.jpg", label: "Mother and kids", credit: "Ketut Subiyanto · Pexels" },
 ];
 
 interface ExamplePhotosProps {
@@ -52,11 +52,14 @@ export function ExamplePhotos({ onPhotoSelected }: ExamplePhotosProps) {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
           gap: 1.5,
+          gridTemplateColumns: "1fr",
+          "@media (min-width: 1024px)": {
+            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+          },
         }}
       >
-        {EXAMPLES.map((example) => (
+        {EXAMPLES.map((example, i) => (
           <Box
             key={example.file}
             role="button"
@@ -76,6 +79,10 @@ export function ExamplePhotos({ onPhotoSelected }: ExamplePhotosProps) {
               transition: "border-color 0.15s, transform 0.15s",
               "&:hover": { borderColor: "primary.main", transform: "translateY(-2px)" },
               "&:focus-visible": { outline: "2px solid primary.main" },
+              "@media (min-width: 1024px)": {
+                gridColumn: Math.floor(i / 2) + 1,
+                gridRow: (i % 2) + 1,
+              },
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
