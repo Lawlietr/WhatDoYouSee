@@ -1,6 +1,6 @@
 import type { ProviderConfig } from "../types";
 
-export const DEFAULT_WEBGPU_MODEL = "LiquidAI/LFM2.5-VL-3B-ONNX";
+export const DEFAULT_WEBGPU_MODEL = "LiquidAI/LFM2.5-VL-450M-ONNX";
 export const DEFAULT_LLAMA_BASE_URL = "http://localhost:8080/v1";
 
 export function defaultProviderConfigs(): Record<string, ProviderConfig> {

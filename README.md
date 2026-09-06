@@ -26,7 +26,7 @@ Most photo-privacy tools show you *where* your photos were taken. The harder que
 - AI analysis as **paragraphs + data table** (location, time, person, socioeconomic signals, devices, brands, relationships, inferred habits)
 - EXIF inspection (date, camera, GPS)
 - Interactive map (street / satellite) when the photo has GPS coordinates
-- WebGPU in-browser inference with model management (download, progress, cancel, switch between LFM2.5-VL-3B and LFM2.5-VL-450M)
+- WebGPU in-browser inference with model management (download, progress, cancel, switch between LFM2.5-VL-450M and LFM2.5-VL-3B)
 - Bring-your-own backend: point the API mode at your own llama-server (OpenAI-compatible) — with connection testing and model auto-detection
 - Dark theme, responsive layout, fully static-deployable
 
@@ -86,8 +86,8 @@ Everything is persisted in localStorage on your machine.
 
 | Mode | Model | Format | Download size |
 |------|-------|--------|---------------|
-| WebGPU (default) | `LiquidAI/LFM2.5-VL-3B-ONNX` | ONNX (fp16 encoder + q4 decoder) | ~3.72 GB |
-| WebGPU (optional) | `LiquidAI/LFM2.5-VL-450M-ONNX` | ONNX (fp16 encoder + q4 decoder) | ~0.75 GB |
+| WebGPU (default) | `LiquidAI/LFM2.5-VL-450M-ONNX` | ONNX (fp16 encoder + q4 decoder) | ~0.75 GB |
+| WebGPU (optional) | `LiquidAI/LFM2.5-VL-3B-ONNX` | ONNX (fp16 encoder + q4 decoder) | ~3.72 GB |
 | API (user's server) | Any vision model your llama-server runs (GGUF) | GGUF | n/a |
 
 Model weights are downloaded from Hugging Face on demand, after explicit confirmation, and cached in the browser's Cache API. **Model weights are licensed separately by their respective owners and are not part of this repository or its license.**

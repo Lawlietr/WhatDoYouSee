@@ -22,19 +22,19 @@ const LFM2_5_VL_FILE_PATTERNS = [
 
 export const WEBGPU_MODELS: WebGpuModelInfo[] = [
   {
-    id: "LiquidAI/LFM2.5-VL-3B-ONNX",
-    name: "LFM2.5-VL-3B (fp16 encoder + Q4 decoder)",
+    id: "LiquidAI/LFM2.5-VL-450M-ONNX",
+    name: "LFM2.5-VL-450M (fp16 encoder + Q4 decoder)",
     format: "ONNX",
-    sizeBytes: 3_999_475_483,
+    sizeBytes: 808_759_577,
     source: "huggingface.co (Hugging Face CDN)",
     dtype: LFM2_5_VL_DTYPES,
     filePatterns: LFM2_5_VL_FILE_PATTERNS,
   },
   {
-    id: "LiquidAI/LFM2.5-VL-450M-ONNX",
-    name: "LFM2.5-VL-450M (fp16 encoder + Q4 decoder)",
+    id: "LiquidAI/LFM2.5-VL-3B-ONNX",
+    name: "LFM2.5-VL-3B (fp16 encoder + Q4 decoder)",
     format: "ONNX",
-    sizeBytes: 808_759_577,
+    sizeBytes: 3_999_475_483,
     source: "huggingface.co (Hugging Face CDN)",
     dtype: LFM2_5_VL_DTYPES,
     filePatterns: LFM2_5_VL_FILE_PATTERNS,
