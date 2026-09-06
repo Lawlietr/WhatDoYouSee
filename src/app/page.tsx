@@ -3,9 +3,11 @@
 import { useCallback, useState } from "react";
 import { Alert, Box, Button, IconButton, Typography } from "@mui/material";
 import {
+  GitHub as GitHubIcon,
   PhotoLibrary as PhotoLibraryIcon,
   Settings as SettingsIcon,
 } from "@mui/icons-material";
+import { SITE } from "../lib/site";
 import { PhotoUpload } from "../components/PhotoUpload";
 import { ExamplePhotos } from "../components/ExamplePhotos";
 import { EXIFDisplay } from "../components/EXIFDisplay";
@@ -59,18 +61,31 @@ export default function Home() {
       >
         <Box>
           <Typography variant="h6" sx={{ lineHeight: 1.2 }}>
-            What Do You See?
+            {SITE.name}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Local, privacy-first photo analysis
+            {SITE.tagline}
           </Typography>
         </Box>
-        <IconButton
-          aria-label="Open settings"
-          onClick={() => setSettingsOpen(true)}
-        >
-          <SettingsIcon />
-        </IconButton>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          {SITE.GITHUB_REPO_URL ? (
+            <a
+              href={SITE.GITHUB_REPO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <IconButton aria-label="View source on GitHub">
+                <GitHubIcon />
+              </IconButton>
+            </a>
+          ) : null}
+          <IconButton
+            aria-label="Open settings"
+            onClick={() => setSettingsOpen(true)}
+          >
+            <SettingsIcon />
+          </IconButton>
+        </Box>
       </Box>
 
       <Box
@@ -174,6 +189,21 @@ export default function Home() {
             </Box>
           </Box>
         )}
+      </Box>
+
+      <Box
+        sx={{
+          px: { xs: 2, md: 4 },
+          py: 2,
+          borderTop: "1px solid",
+          borderColor: "divider",
+          textAlign: "center",
+        }}
+      >
+        <Typography variant="caption" color="text.secondary">
+          Inspired by ENTE&rsquo;s theyseeyourphotos · runs entirely on your own
+          hardware · AGPL-3.0
+        </Typography>
       </Box>
 
       <SettingsPanel
