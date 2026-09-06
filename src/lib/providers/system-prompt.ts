@@ -17,7 +17,23 @@ Guidelines:
 - Be specific but speculative — note when you are guessing vs. certain
 - Consider EXIF metadata if available (date, GPS, camera model)
 - Do NOT identify specific individuals by name
-- Output ONLY the JSON, no extra text`;
+- Output ONLY the JSON, no extra text
+
+Go deeper — beyond the basics, an attentive observer also speculates:
+- For EACH main person: apparent age range, build, grooming, and what their overall appearance signals
+- Personality & interests: what clothing style, gear, and surroundings suggest about hobbies, tastes, and lifestyle
+- Socioeconomic signals: housing, vehicle, device age/brand, and surroundings → income bracket and wealth level
+- Brands: name brands, logos, or devices you can actually identify in the image
+- Culture & beliefs: religion, nationality, or affiliation — only when visible evidence exists (clothing, jewelry, flags, symbols, tattoos); skip if there is none
+- Relationships: if more than one main person appears, what they most likely are to each other (couple, parent and child, friends, colleagues) and what in the image suggests it
+- Habits: lifestyle patterns the photo implies (early riser, urban commuter, etc.)
+
+Rules for the deeper layer:
+- Start with what is certain (place, setting, who is present) before moving to speculation
+- Each inference should be one short sentence; skip a category when the image gives no visible evidence for it
+- Do not invent what the image does not support
+
+Remember: output ONLY the JSON object, no extra text.`;
 
 export function buildUserPrompt(exif?: {
   createDate?: string;

@@ -106,7 +106,7 @@ Shared provider helpers: `src/lib/providers/system-prompt.ts` (privacy analysis 
 
 ## System Prompt (Privacy Analysis)
 
-Used by both WebGPU and llama-server providers. **Status:** the Step 7.6 deep-enrichment prompt (9-group table schema + confidence tags) was deployed 2026-09 but REVERTED after owner testing — on strong backends (Gemma4-12B / Qwen3.6-35B-VL) the model stopped performing location analysis. The original generic prompt (below) is restored as the production prompt; a more conservative 7.6 iteration (enrich without changing the baseline behavior, ideally verified against the original site's output) is still planned.
+Used by both WebGPU and llama-server providers. **Status (Step 7.6, 2026-09):** attempt 1 (full rewrite: 9-group `"Group: item"` schema + confidence tags + 12-word cap) was REVERTED after owner testing — strong backends (Gemma4-12B / Qwen3.6-35B-VL) stopped performing location analysis entirely. Attempt 2 (current, deployed) is ADDITIVE: the original prompt below is preserved verbatim (owner: it meets ~70% of requirements and is the baseline), with a "Go deeper" addendum appended for per-person appearance, personality/interests, income signals, brands, culture/beliefs (visible evidence only), multi-person relationships, habits. Deliberate constraints from the attempt-1 post-mortem: no global length cap (the 12-word cap starved location), no "concise above all" framing, no confidence-tag format (baseline already asks the model to mark guessing vs. certain), no changed table key format, skip-if-no-evidence applies to the deeper layer only, and an explicit "start with what is certain (place, setting, who is present)" guardrail.
 
 ```
 You are an AI assistant that analyzes photos and infers what private information an observer could gather. Based on the image, provide your analysis in the following JSON format:
@@ -129,6 +129,22 @@ Guidelines:
 - Consider EXIF metadata if available (date, GPS, camera model)
 - Do NOT identify specific individuals by name
 - Output ONLY the JSON, no extra text
+
+Go deeper — beyond the basics, an attentive observer also speculates:
+- For EACH main person: apparent age range, build, grooming, and what their overall appearance signals
+- Personality & interests: what clothing style, gear, and surroundings suggest about hobbies, tastes, and lifestyle
+- Socioeconomic signals: housing, vehicle, device age/brand, and surroundings → income bracket and wealth level
+- Brands: name brands, logos, or devices you can actually identify in the image
+- Culture & beliefs: religion, nationality, or affiliation — only when visible evidence exists (clothing, jewelry, flags, symbols, tattoos); skip if there is none
+- Relationships: if more than one main person appears, what they most likely are to each other (couple, parent and child, friends, colleagues) and what in the image suggests it
+- Habits: lifestyle patterns the photo implies (early riser, urban commuter, etc.)
+
+Rules for the deeper layer:
+- Start with what is certain (place, setting, who is present) before moving to speculation
+- Each inference should be one short sentence; skip a category when the image gives no visible evidence for it
+- Do not invent what the image does not support
+
+Remember: output ONLY the JSON object, no extra text.
 ```
 
 Testing scope note (owner): 450M WebGPU model quality is out of scope (it exists only to prove WebGPU works); prompt iterations are judged on strong backends (Qwen3.6-35B-VL / Gemma4-12B).
@@ -136,7 +152,7 @@ Testing scope note (owner): 450M WebGPU model quality is out of scope (it exists
 ## Known Gaps (to be closed before launch)
 
 1. ~~Example photos are placeholders~~ — **done**: 4 real Pexels photos in `public/examples/` (free Pexels License; credits in `public/examples/CREDITS.md`, also shown under each thumbnail).
-2. **System prompt too shallow (7.6 reopened)** — the first enrichment attempt (grouped table + confidence tags, deployed 2026-09) was reverted: owner testing on strong models showed location analysis regressed to zero. Next iteration must preserve the baseline (location first) while adding depth (TODO.md Step 7.6).
+2. **System prompt depth (7.6 attempt 2 awaiting owner test)** — attempt 1 (full rewrite) regressed location analysis and was reverted; attempt 2 keeps the original prompt verbatim and appends a "Go deeper" addendum (per-person, personality, income, brands, culture, relationships, habits). Owner test on strong backends is the remaining gate (TODO.md Step 7.6).
 3. **Reverse geocoding not wired** — `/api/reverse-geocode` exists but the UI never calls it; address display near the map is planned (TODO.md Step 7.7).
 4. **WebGPU 450M = prose only** — works (user-verified) but cannot produce the JSON table; 3B or the user's llama-server backend is needed for full structured output.
 5. **Deployment deferred** — local production (`npm run build && npm start`) must be verified first; Cloudflare Pages is best-effort afterwards and may be skipped (TODO.md Phase 8.0).
