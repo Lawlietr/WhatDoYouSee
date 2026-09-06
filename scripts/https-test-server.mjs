@@ -22,9 +22,9 @@ const certDir = path.join(here, ".devcert");
 const keyPath = path.join(certDir, "key.pem");
 const certPath = path.join(certDir, "cert.pem");
 const port = Number(process.env.HTTPS_PORT ?? 3443);
-const target = process.env.PROXY_TARGET ?? "127.0.0.1:3103";
+const target = process.env.PROXY_TARGET ?? "127.0.0.1:3000";
 const [host, portStr] = target.split(":");
-const targetPort = Number(portStr ?? 3103);
+const targetPort = Number(portStr ?? 3000);
 
 async function certExists(p) {
   try {

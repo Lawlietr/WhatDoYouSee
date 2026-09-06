@@ -152,10 +152,10 @@ Testing scope note (owner): 450M WebGPU model quality is out of scope (it exists
 ## Known Gaps (to be closed before launch)
 
 1. ~~Example photos are placeholders~~ — **done**: 4 real Pexels photos in `public/examples/` (free Pexels License; credits in `public/examples/CREDITS.md`, also shown under each thumbnail).
-2. **System prompt depth (7.6 attempt 2 awaiting owner test)** — attempt 1 (full rewrite) regressed location analysis and was reverted; attempt 2 keeps the original prompt verbatim and appends a "Go deeper" addendum (per-person, personality, income, brands, culture, relationships, habits). Owner test on strong backends is the remaining gate (TODO.md Step 7.6).
+2. **System prompt depth (7.6 done, 2026-09)** — attempt 1 (full rewrite) regressed location analysis and was reverted; attempt 2 keeps the original prompt verbatim and appends a "Go deeper" addendum (per-person, personality, income, brands, culture, relationships, habits) — owner-verified on strong backends (Gemma4-12B / Qwen3.6-35B-VL).
 3. **Reverse geocoding not wired** — `/api/reverse-geocode` exists but the UI never calls it; address display near the map is planned (TODO.md Step 7.7).
 4. **WebGPU 450M = prose only** — works (user-verified) but cannot produce the JSON table; 3B or the user's llama-server backend is needed for full structured output.
-5. **Deployment deferred** — local production (`npm run build && npm start`) must be verified first; Cloudflare Pages is best-effort afterwards and may be skipped (TODO.md Phase 8.0).
+5. ~~Deployment deferred~~ — **DEPLOYED (2026-09):** live on Cloudflare Pages at `https://what-do-you-see.pages.dev` plus custom domains `https://wdus.avpclub.eu.org` (primary) and `https://wdustesting.avpclub.eu.org` (testing); owner-verified WebGPU (450M) and API mode (Gemma4-12B, thinking model) on the live site. One-command deploy: `node scripts/deploy-pages.mjs` (see TODO.md Phase 8).
 
 ## Development Conventions
 
@@ -211,19 +211,24 @@ These routes only exist in **self-hosted** builds. They are incompatible with st
 # Install dependencies
 npm install
 
-# Development
-npm run dev -- -p 3100 -H 0.0.0.0   # port 3000 is occupied by a docker proxy; -H 0.0.0.0 so LAN machines can test
+# Development (default port 3000)
+npm run dev
 
-# Production build — self-hosted (keeps API routes, run with `next start`)
+# Production build — self-hosted (keeps API routes, run with `next start`, default port 3000)
 npm run build
-npm start -- -p 3103 -H 0.0.0.0   # test servers always bind 0.0.0.0, never localhost (LAN testing)
+npm start
 
 # Production build — static export for Cloudflare/HF (excludes API routes)
 npm run build:export
 
 # Optional — HTTPS test server (secure context so WebGPU works when the app is
 # reached over a LAN IP; self-signed cert generated at scripts/.devcert/ on first run)
-node scripts/https-test-server.mjs   # https://<lan-ip>:3443 -> http://127.0.0.1:3103
+node scripts/https-test-server.mjs   # https://<lan-ip>:3443 -> http://127.0.0.1:3000 (override: PROXY_TARGET, HTTPS_PORT)
+
+# NOTE (this host only): the dev/production servers above are conventionally
+# run on non-default ports here because 3000 is occupied by a docker proxy —
+# see LOCAL-TEST-NOTES.md. The scripts accept env overrides (PROXY_TARGET,
+# HTTPS_PORT) and Next.js' own -p flag when a port is taken.
 
 # Optional (local dev testing only) — the app connects to the user's OWN llama-server;
 # we never host or launch one. Vision requires the mmproj projector: llama-server -m <model>.gguf --mmproj <mmproj>.gguf --port 8080
@@ -306,8 +311,8 @@ node scripts/deploy-pages.mjs --no-domain  # skip the domain step
 ```
 
 - **Secrets policy:** `scripts/deploy-pages.mjs` contains NO credentials. wrangler reads `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` from the environment; the script refuses to run if either is missing and never prints their values. No `wrangler login` needed.
-- Project: `what-do-you-see` → `https://what-do-you-see.pages.dev`; custom domain `wdustesting.avpclub.eu.org` (zone `avpclub.eu.org` is proxied through Cloudflare). The domain step uses the REST API directly — `POST /accounts/{acct}/pages/projects/{project}/domains` with body `{"name": "<domain>"}` (field is `name`, NOT `domain`; the legacy `/custom-domains` endpoint is gone from the public API). CNAME is API-managed and the TLS cert is auto-issued; step is idempotent.
-- If a local `next start` is serving on 3103, restart it after the deploy (the script prints a warning).
+- Project: `what-do-you-see` → `https://what-do-you-see.pages.dev`; custom domains (zone `avpclub.eu.org` is proxied through Cloudflare): **`wdus.avpclub.eu.org`** (primary) and **`wdustesting.avpclub.eu.org`** (testing) — both live, owner-verified. The domain step uses the REST API directly — `POST /accounts/{acct}/pages/projects/{project}/domains` with body `{"name": "<domain>"}` (field is `name`, NOT `domain`; the legacy `/custom-domains` endpoint is gone from the public API). CNAME is API-managed and the TLS cert is auto-issued; step is idempotent.
+- If a local `next start` is running (port 3000/3103), restart it after the deploy (the script prints a warning).
 
 ### Deploy to HF Static Spaces
 

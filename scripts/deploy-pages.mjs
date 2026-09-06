@@ -18,7 +18,7 @@ import path from "node:path";
 
 const PROJECT = "what-do-you-see";
 const ZONE = "avpclub.eu.org";
-const DOMAIN = "wdustesting.avpclub.eu.org";
+const DOMAINS = ["wdus.avpclub.eu.org", "wdustesting.avpclub.eu.org"];
 const OUT_DIR = path.resolve(process.cwd(), "out");
 
 async function cf(endpoint, init = {}) {
@@ -64,15 +64,15 @@ if (missing.length > 0) {
 // 1. Warn if a local `next start` server is running (build:export replaces
 //    .next and would leave the running server serving dead chunks).
 try {
-  const listeners = execSync("ss -tlnp | grep -E ':(3103)\\b'", {
+  const listeners = execSync("ss -tlnp | grep -E ':(3000|3103)\\b'", {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "ignore"],
   });
   if (listeners.trim()) {
     console.warn(
-      "WARNING: a server is listening on port 3103 (local next start?).\n" +
+      "WARNING: a server is listening on port 3000/3103 (local next start?).\n" +
         "  build:export replaces .next; restart that server afterwards\n" +
-        "  (npm run build && npm start -- -p 3103 -H 0.0.0.0).",
+        "  (npm run build && npm start).",
     );
   }
 } catch {
@@ -117,7 +117,6 @@ run(`npx wrangler pages deploy ${JSON.stringify(OUT_DIR)} --project-name=${PROJE
 //    Zone is on Cloudflare nameservers, so a proxied CNAME to the pages.dev
 //    alias is enough for Cloudflare to verify + issue the TLS certificate.
 if (!skipDomain) {
-  console.log(`\nEnsuring custom domain ${DOMAIN} (no-op if already attached):`);
   try {
     const acctId = process.env.CLOUDFLARE_ACCOUNT_ID;
     const projBase = `accounts/${acctId}/pages/projects/${PROJECT}`;
@@ -127,13 +126,18 @@ if (!skipDomain) {
     if (!zone) throw new Error(`zone ${ZONE} not found in this account`);
 
     const listed = await cf(`${projBase}/domains`);
-    const domains = listed.result ?? [];
-    const existing = domains.find((d) => d.name === DOMAIN);
+    const attached = listed.result ?? [];
+    const target = `${PROJECT}.pages.dev`;
 
-    if (!existing) {
-      const recs = await cf(`zones/${zone.id}/dns_records?name=${DOMAIN}`);
+    for (const domain of DOMAINS) {
+      console.log(`\nEnsuring custom domain ${domain} (no-op if already attached):`);
+      const existing = attached.find((d) => d.name === domain);
+      if (existing) {
+        console.log(`  Already attached (status: ${existing.status}).`);
+        continue;
+      }
+      const recs = await cf(`zones/${zone.id}/dns_records?name=${domain}`);
       const rec = recs.result[0];
-      const target = `${PROJECT}.pages.dev`;
       if (rec?.type === "CNAME" && rec?.content === target) {
         console.log("  DNS CNAME already in place.");
       } else if (rec) {
@@ -145,28 +149,26 @@ if (!skipDomain) {
       } else {
         await cf(`zones/${zone.id}/dns_records`, {
           method: "POST",
-          body: JSON.stringify({ type: "CNAME", name: DOMAIN, content: target, proxied: true, ttl: 1 }),
+          body: JSON.stringify({ type: "CNAME", name: domain, content: target, proxied: true, ttl: 1 }),
         });
-        console.log(`  Created CNAME ${DOMAIN} -> ${target} (proxied).`);
+        console.log(`  Created CNAME ${domain} -> ${target} (proxied).`);
       }
       const add = await cf(`${projBase}/domains`, {
         method: "POST",
-        body: JSON.stringify({ name: DOMAIN }),
+        body: JSON.stringify({ name: domain }),
       });
       console.log(`  Attached domain (status: ${add.result?.status ?? "?"}).`);
-    } else {
-      console.log(`  Already attached (status: ${existing.status}).`);
     }
   } catch (e) {
     console.warn(
       `  Custom-domain step failed: ${e.message}\n` +
-        "  Check the Cloudflare dashboard if the domain is not serving yet.",
+        "  Check the Cloudflare dashboard if a domain is not serving yet.",
     );
   }
 }
 
 console.log(`\nDeploy complete.`);
 console.log(`  Primary:  https://${PROJECT}.pages.dev`);
-if (!skipDomain) console.log(`  Custom:   https://${DOMAIN} (after Cloudflare certificate issuance, a few minutes)`);
+if (!skipDomain) for (const d of DOMAINS) console.log(`  Custom:   https://${d} (after Cloudflare certificate issuance, a few minutes)`);
 console.log(`\nSuggested smoke test: fetch the home page, one example photo, and /404, then`);
 console.log(`verify WebGPU + API mode in a real browser (https:// gives a secure context).`);
