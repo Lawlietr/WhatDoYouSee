@@ -43,14 +43,14 @@ Most photo-privacy tools show you *where* your photos were taken. The harder que
 
 ```bash
 npm install
-npm run dev -- -p 3100        # development server
+npm run dev                   # development server (http://localhost:3000)
 ```
 
 ### Production (self-hosted, full features)
 
 ```bash
 npm run build
-npm start -- -p 3103 -H 0.0.0.0
+npm start                     # http://localhost:3000 (add -H 0.0.0.0 for LAN access)
 ```
 
 ### Static export (Cloudflare Pages / Hugging Face Spaces)
@@ -66,8 +66,8 @@ The static build keeps every feature that matters in the browser — WebGPU infe
 WebGPU requires a secure context (HTTPS or localhost). For LAN testing:
 
 ```bash
-npm run build && npm start -- -p 3103 -H 0.0.0.0
-node scripts/https-test-server.mjs    # https://<your-lan-ip>:3443
+npm run build && npm start -H 0.0.0.0
+node scripts/https-test-server.mjs    # https://<your-lan-ip>:3443 (proxies localhost:3000)
 ```
 
 A self-signed certificate is generated on first run; accept the browser warning once.
