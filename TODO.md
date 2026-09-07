@@ -334,14 +334,14 @@ usePhotoAnalysis
 ### Step 7.1: Functional Testing
 - [x] Test WebGPU mode with real photo (user-verified: LFM2.5-VL-450M inference OK in real browser; pipeline also confirmed via transformers.js wasm backend on the server)
 - [x] Test API mode with llama-server running (user-verified: Qwen3.5-9B-VL endpoint works; llama-server runs with `--cors-origins *` so the browser can call it directly)
-- [ ] Test EXIF parsing with various image formats (JPG, PNG, HEIC)
+- [x] Test EXIF parsing with various image formats — JPG verified (user, 2026-09); PNG/HEIC still untested
 - [x] Test model download → confirm → progress → completion (Playwright E2E + user's 771 MB 450M download)
 - [x] Test model download cancellation (Playwright E2E)
 - [x] Test settings persistence across page refreshes (Playwright E2E)
 - [x] Test provider switching (Playwright E2E)
 - [x] Test connection test with valid/invalid URLs (Playwright E2E + user)
 - [x] Test map display with/without GPS data (user-verified: GPS photo shows marker at correct location on 450M run; no-GPS dashed fallback verified in E2E)
-- [ ] Test mobile responsive layout
+- [x] Test mobile responsive layout (user, 2026-09: verified on real iPhone + iPad devices)
 
 ### Step 7.5: Example Photos (replace placeholders) — DONE
 - [x] Replaced the 4 program-generated gradient placeholders in `public/examples/` with 4 real Pexels photos (`street.jpg` Shibuya night, `interior.jpg` studio laptop, `outdoors.jpg` alpine hike, `selfie.jpg` café) — Pexels License (free use, no attribution required); attribution kept in `public/examples/CREDITS.md` and rendered under each thumbnail
@@ -528,5 +528,5 @@ types.ts
 | Phase 4: Settings UI | ✅ Done (4.1–4.7) | ed31d8f; settings drawer, provider selector/config, connection test, WebGPU model mgmt + download progress |
 | Phase 5: Settings Hooks | ✅ Done (5.1–5.5) | useSettings/useProvider/useModelDownload/useWebGPU/usePhotoAnalysis; webgpu per-model pipelines; llama-server API-key support |
 | Phase 6: Main Page | ✅ Done (6.1–6.3) | page.tsx hero + two-column assembly, AppProviders, llama-server /v1 auto-normalize + API-key detect, Playwright E2E 15/15 |
-| Phase 7: Testing | 🔄 In progress | 7.1 mostly verified (WebGPU + API + download + settings + map both directions); 7.5 example photos done; pending: EXIF format matrix, mobile responsive, 7.6 prompt/table refinement; 7.7 reverse-geocode is OPTIONAL (owner: marker alone is sufficient) |
+| Phase 7: Testing | 🔄 In progress | 7.1 done except PNG/HEIC EXIF spot-check (JPG + mobile real-device verified 2026-09); 7.5 example photos done; 7.6 prompt refinement owner-verified; pending: 7.2 error handling, 7.3 performance, 7.4 UI polish; 7.7 reverse-geocode is OPTIONAL (owner: marker alone is sufficient) |
 | Phase 8: Deployment | ⏸ Deferred | Local production verification first (8.0); Cloudflare Pages best-effort, skippable if it can't serve normal functionality |
