@@ -30,9 +30,8 @@
 
 | Commit | 日期 | 內容 |
 |--------|------|------|
-| `23ac171` | 2026-09-21 | i18n：介面繁體中文（EN/zh-TW 雙語、預設 zh-TW + 一次性遷移、設定面板語言切換）＋分析提示詞雙語化 → `design/i18n.md` |
 | `143196b` | 2026-09-07 | 7.1：mobile 響應式驗證完成（real iPhone + iPad）；EXIF JPG 驗證完成，PNG/HEIC 待補 |
 | `7b99f3d` | 2026-09-06 | 示例照片改版：新 Pexels 照片 + desktop 直欄優先 / mobile 堆疊佈局 |
 | `e9974ae` | 2026-09-06 | 部署策略：test/prod 雙專案分割、`--branch main` 修正、post-deploy WebGPU 修復記錄 |
 | `176b9bc` | 2026-09-06 | WebGPU：禁止靜默下載（inference gate on cache）；model dialog 對當前模型可用 |
-
+| `a9bdad9` | 2026-09-06 | 部署：強制 production deployment；舊 3B 預設一次性遷移到 450M |
