@@ -3,19 +3,21 @@
 import { useState } from "react";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { PhotoLibrary } from "@mui/icons-material";
+import type { Messages } from "../lib/i18n/translations";
+import { useI18n } from "../hooks/useI18n";
 
 interface Example {
   file: string;
   src: string;
-  label: string;
+  labelKey: keyof Messages;
   credit: string;
 }
 
 const EXAMPLES: Example[] = [
-  { file: "parade.jpg", src: "/examples/parade.jpg", label: "Street parade", credit: "Klub Boks · Pexels" },
-  { file: "family.jpg", src: "/examples/family.jpg", label: "Family gathering", credit: "Raymond Ma Yi Rong · Pexels" },
-  { file: "walk.jpg", src: "/examples/walk.jpg", label: "A tree-lined walk", credit: "Hsing Chi Fang · Pexels" },
-  { file: "family-bed.jpg", src: "/examples/family-bed.jpg", label: "Mother and kids", credit: "Ketut Subiyanto · Pexels" },
+  { file: "parade.jpg", src: "/examples/parade.jpg", labelKey: "examples.parade", credit: "Klub Boks · Pexels" },
+  { file: "family.jpg", src: "/examples/family.jpg", labelKey: "examples.family", credit: "Raymond Ma Yi Rong · Pexels" },
+  { file: "walk.jpg", src: "/examples/walk.jpg", labelKey: "examples.walk", credit: "Hsing Chi Fang · Pexels" },
+  { file: "family-bed.jpg", src: "/examples/family-bed.jpg", labelKey: "examples.familyBed", credit: "Ketut Subiyanto · Pexels" },
 ];
 
 interface ExamplePhotosProps {
@@ -23,6 +25,7 @@ interface ExamplePhotosProps {
 }
 
 export function ExamplePhotos({ onPhotoSelected }: ExamplePhotosProps) {
+  const { t } = useI18n();
   const [loadingFile, setLoadingFile] = useState<string | null>(null);
 
   const selectExample = async (example: Example) => {
@@ -47,7 +50,7 @@ export function ExamplePhotos({ onPhotoSelected }: ExamplePhotosProps) {
         sx={{ mb: 1, display: "flex", alignItems: "center", gap: 0.75 }}
       >
         <PhotoLibrary sx={{ fontSize: 18 }} />
-        Or try an example
+        {t("examples.try")}
       </Typography>
       <Box
         sx={{
@@ -64,7 +67,7 @@ export function ExamplePhotos({ onPhotoSelected }: ExamplePhotosProps) {
             key={example.file}
             role="button"
             tabIndex={0}
-            aria-label={`Use example photo: ${example.label}`}
+            aria-label={t("examples.useAria", { label: t(example.labelKey) })}
             onClick={() => selectExample(example)}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") selectExample(example);
@@ -88,7 +91,7 @@ export function ExamplePhotos({ onPhotoSelected }: ExamplePhotosProps) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={example.src}
-              alt={example.label}
+              alt={t(example.labelKey)}
               loading="lazy"
               style={{ display: "block", width: "100%", aspectRatio: "4/3", objectFit: "cover" }}
             />
@@ -102,7 +105,7 @@ export function ExamplePhotos({ onPhotoSelected }: ExamplePhotosProps) {
                 background: "rgba(0,0,0,0.55)",
               }}
             >
-              <Typography variant="caption">{example.label}</Typography>
+              <Typography variant="caption">{t(example.labelKey)}</Typography>
               <Typography variant="caption" color="text.disabled" sx={{ display: "block" }}>
                 {example.credit}
               </Typography>

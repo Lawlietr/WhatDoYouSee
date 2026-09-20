@@ -17,9 +17,11 @@ import { LoadingAnimation } from "../components/LoadingAnimation";
 import { SettingsPanel } from "../components/settings/SettingsPanel";
 import { useSettings } from "../hooks/useSettings";
 import { usePhotoAnalysis } from "../hooks/usePhotoAnalysis";
+import { useI18n } from "../hooks/useI18n";
 
 export default function Home() {
   const { settings, updateSettings } = useSettings();
+  const { t } = useI18n();
   const {
     isAnalyzing,
     stage,
@@ -64,7 +66,7 @@ export default function Home() {
             {SITE.name}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {SITE.tagline}
+            {t("site.tagline")}
           </Typography>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -74,13 +76,13 @@ export default function Home() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <IconButton aria-label="View source on GitHub">
+              <IconButton aria-label={t("page.githubAria")}>
                 <GitHubIcon />
               </IconButton>
             </a>
           ) : null}
           <IconButton
-            aria-label="Open settings"
+            aria-label={t("page.settingsAria")}
             onClick={() => setSettingsOpen(true)}
           >
             <SettingsIcon />
@@ -102,17 +104,20 @@ export default function Home() {
           <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <Box sx={{ textAlign: "center", mt: { xs: 4, md: 8 } }}>
               <Typography variant="h4" component="h1">
-                What can a stranger tell from your photo?
+                {t("page.title")}
               </Typography>
               <Typography
                 variant="body1"
                 color="text.secondary"
                 sx={{ mt: 1, mx: "auto", maxWidth: 560 }}
               >
-                Upload a photo and the AI will list everything an observer could
-                infer about you. Everything is processed {settings.inferenceMode === "webgpu"
-                  ? "in your browser"
-                  : "on your own server"} — nothing is sent to a third party.
+                {t("page.subtitle", {
+                  mode: t(
+                    settings.inferenceMode === "webgpu"
+                      ? "page.subtitleModeWebgpu"
+                      : "page.subtitleModeApi"
+                  ),
+                })}
               </Typography>
             </Box>
             <PhotoUpload onPhotoSelected={handlePhotoSelected} />
@@ -153,7 +158,7 @@ export default function Home() {
                       size="small"
                       onClick={() => void analyze(photo)}
                     >
-                      Retry
+                      {t("page.retry")}
                     </Button>
                   }
                 >
@@ -164,13 +169,16 @@ export default function Home() {
               {!isAnalyzing && result && (
                 <>
                   <Typography variant="caption" color="text.secondary">
-                    Analyzed with {meta?.provider} ({meta?.model}) in{" "}
-                    {((meta?.latencyMs ?? 0) / 1000).toFixed(1)}s
+                    {t("page.analyzedWith", {
+                      provider: meta?.provider ?? "",
+                      model: meta?.model ?? "",
+                      seconds: ((meta?.latencyMs ?? 0) / 1000).toFixed(1),
+                    })}
                   </Typography>
                   <AnalysisResult result={result} />
                   <Box>
                     <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                      Location
+                      {t("page.location")}
                     </Typography>
                     <MapView
                       lat={exif?.latitude ?? null}
@@ -182,7 +190,7 @@ export default function Home() {
                     startIcon={<PhotoLibraryIcon />}
                     onClick={handleClear}
                   >
-                    Analyze another photo
+                    {t("page.analyzeAnother")}
                   </Button>
                 </>
               )}
@@ -201,8 +209,7 @@ export default function Home() {
         }}
       >
         <Typography variant="caption" color="text.secondary">
-          Inspired by ENTE&rsquo;s theyseeyourphotos · runs entirely on your own
-          hardware · AGPL-3.0
+          {t("page.footer")}
         </Typography>
       </Box>
 

@@ -14,10 +14,13 @@ import {
 import { Settings as SettingsIcon } from "@mui/icons-material";
 import type { AppSettings, InferenceMode, ProviderConfig } from "../../lib/types";
 import { listProviders, getProvider } from "../../lib/providers/registry";
+import { SUPPORTED_LANGUAGES, normalizeLanguage } from "../../lib/i18n/translations";
+import type { Language } from "../../lib/i18n/translations";
 import { ProviderSelector } from "./ProviderSelector";
 import { ProviderConfigForm, validateProviderConfig } from "./ProviderConfigForm";
 import { ConnectionTest } from "./ConnectionTest";
 import { WebGPUSettings } from "./WebGPUSettings";
+import { useI18n } from "../../hooks/useI18n";
 
 interface SettingsPanelProps {
   open: boolean;
@@ -29,6 +32,7 @@ interface SettingsPanelProps {
 const PANEL_WIDTH = 440;
 
 export function SettingsPanel({ open, onClose, settings, onSave }: SettingsPanelProps) {
+  const { t } = useI18n();
   const [draft, setDraft] = useState<AppSettings>(settings);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -46,6 +50,11 @@ export function SettingsPanel({ open, onClose, settings, onSave }: SettingsPanel
 
   const setMode = (mode: InferenceMode) => {
     setDraft((d) => ({ ...d, inferenceMode: mode }));
+    setValidationError(null);
+  };
+
+  const setLanguage = (language: Language) => {
+    setDraft((d) => ({ ...d, language }));
     setValidationError(null);
   };
 
@@ -70,7 +79,8 @@ export function SettingsPanel({ open, onClose, settings, onSave }: SettingsPanel
     if (draft.inferenceMode === "api" && activeProvider) {
       const error = validateProviderConfig(
         activeProvider,
-        draft.providerConfigs[activeProvider.id] ?? {}
+        draft.providerConfigs[activeProvider.id] ?? {},
+        t
       );
       if (error) {
         setValidationError(error);
@@ -100,13 +110,34 @@ export function SettingsPanel({ open, onClose, settings, onSave }: SettingsPanel
           }}
         >
           <SettingsIcon />
-          <Typography variant="h6">Settings</Typography>
+          <Typography variant="h6">{t("settings.title")}</Typography>
         </Box>
 
         <Box sx={{ flex: 1, overflowY: "auto", p: 2, display: "flex", flexDirection: "column", gap: 2 }}>
           <Box>
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Inference mode
+              {t("settings.language")}
+            </Typography>
+            <ToggleButtonGroup
+              size="small"
+              exclusive
+              value={normalizeLanguage(draft.language)}
+              onChange={(_, value: Language | null) => value && setLanguage(value)}
+              fullWidth
+            >
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <ToggleButton key={lang.id} value={lang.id}>
+                  {lang.label}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+          </Box>
+
+          <Divider />
+
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              {t("settings.inferenceMode")}
             </Typography>
             <ToggleButtonGroup
               size="small"
@@ -115,8 +146,8 @@ export function SettingsPanel({ open, onClose, settings, onSave }: SettingsPanel
               onChange={(_, value: InferenceMode | null) => value && setMode(value)}
               fullWidth
             >
-              <ToggleButton value="webgpu">WebGPU (browser)</ToggleButton>
-              <ToggleButton value="api">API (your server)</ToggleButton>
+              <ToggleButton value="webgpu">{t("settings.modeWebgpu")}</ToggleButton>
+              <ToggleButton value="api">{t("settings.modeApi")}</ToggleButton>
             </ToggleButtonGroup>
           </Box>
 
@@ -165,10 +196,10 @@ export function SettingsPanel({ open, onClose, settings, onSave }: SettingsPanel
           }}
         >
           <Button onClick={onClose} color="inherit">
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button variant="contained" onClick={handleSave}>
-            Save
+            {t("settings.save")}
           </Button>
         </Box>
       </Box>

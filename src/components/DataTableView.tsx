@@ -1,18 +1,20 @@
 "use client";
 
 import { Box, Typography } from "@mui/material";
+import { useI18n } from "../hooks/useI18n";
 
 interface DataTableViewProps {
   table: Record<string, string>;
 }
 
 export function DataTableView({ table }: DataTableViewProps) {
+  const { t } = useI18n();
   const entries = Object.entries(table);
 
   if (entries.length === 0) {
     return (
       <Typography variant="body2" color="text.disabled">
-        No structured findings.
+        {t("data.none")}
       </Typography>
     );
   }
@@ -27,7 +29,7 @@ export function DataTableView({ table }: DataTableViewProps) {
     >
       <Box
         role="table"
-        aria-label="Inferred data"
+        aria-label={t("data.tableAria")}
         sx={{
           display: "grid",
           gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" },

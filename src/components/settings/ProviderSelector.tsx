@@ -2,6 +2,7 @@
 
 import { FormControl, InputLabel, MenuItem, Select, Tooltip, Typography } from "@mui/material";
 import type { AIProvider } from "../../lib/types";
+import { useI18n } from "../../hooks/useI18n";
 
 interface ProviderSelectorProps {
   providers: AIProvider[];
@@ -10,12 +11,13 @@ interface ProviderSelectorProps {
 }
 
 export function ProviderSelector({ providers, value, onChange }: ProviderSelectorProps) {
+  const { t } = useI18n();
   return (
     <FormControl fullWidth size="small">
-      <InputLabel id="provider-selector-label">Provider</InputLabel>
+      <InputLabel id="provider-selector-label">{t("provider.label")}</InputLabel>
       <Select
         labelId="provider-selector-label"
-        label="Provider"
+        label={t("provider.label")}
         value={value}
         onChange={(e) => onChange(e.target.value as string)}
       >
@@ -27,13 +29,13 @@ export function ProviderSelector({ providers, value, onChange }: ProviderSelecto
                 sx={{ color: provider.enabled ? "text.primary" : "text.disabled" }}
               >
                 {provider.name}
-                {!provider.enabled && " (coming soon)"}
+                {!provider.enabled && t("provider.comingSoon")}
               </Typography>
             </MenuItem>
           );
           if (provider.enabled) return item;
           return (
-            <Tooltip key={`${provider.id}-tip`} title="Not implemented yet" followCursor>
+            <Tooltip key={`${provider.id}-tip`} title={t("provider.notImplemented")} followCursor>
               {item}
             </Tooltip>
           );

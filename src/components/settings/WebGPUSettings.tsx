@@ -24,6 +24,7 @@ import {
 import { WEBGPU_MODELS, getModelInfo } from "../../lib/model-catalog";
 import { ModelDownloadDialog } from "../ModelDownloadDialog";
 import { DownloadProgress } from "../DownloadProgress";
+import { useI18n } from "../../hooks/useI18n";
 
 interface WebGPUSettingsProps {
   modelId: string;
@@ -39,6 +40,7 @@ async function computeCacheMap(): Promise<Record<string, CacheStatus>> {
 }
 
 export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) {
+  const { t } = useI18n();
   const [support, setSupport] = useState<"checking" | "yes" | "no">("checking");
   const isSecureContext = typeof window === "undefined" ? true : window.isSecureContext;
   const [cached, setCached] = useState<Record<string, CacheStatus>>({});
@@ -94,10 +96,10 @@ export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) 
       .catch((e: unknown) => {
         if (e instanceof DOMException && e.name === "AbortError") {
           setDownload(null);
-          setDownloadError("Download cancelled.");
+          setDownloadError(t("common.downloadCancelled"));
         } else {
           setDownload(null);
-          setDownloadError(e instanceof Error ? e.message : "Download failed");
+          setDownloadError(e instanceof Error ? e.message : t("common.downloadFailed"));
         }
       });
   };
@@ -122,33 +124,35 @@ export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) 
   const modelCached = modelStatus?.cached ? modelStatus : undefined;
   const completeIds = Object.keys(cached).filter((id) => cached[id]?.cached);
 
+  const statusText = modelCached
+    ? t("webgpu.downloaded", { bytes: formatBytes(modelCached.bytes) })
+    : modelStatus?.bytes > 0
+      ? t("webgpu.partial", { bytes: formatBytes(modelStatus.bytes) })
+      : t("webgpu.notDownloaded");
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       {support === "checking" && (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <CircularProgress size={14} />
           <Typography variant="body2" color="text.secondary">
-            Checking WebGPU support...
+            {t("webgpu.checking")}
           </Typography>
         </Box>
       )}
       {support === "no" && !isSecureContext && (
         <Alert severity="warning" sx={{ fontSize: "0.8rem" }}>
-          WebGPU is hidden because this page is not in a secure context (HTTP on a
-          non-localhost address). Your browser may still support WebGPU — open the app
-          via https://… or http://localhost… (e.g. an SSH tunnel) to enable it.
+          {t("webgpu.insecure")}
         </Alert>
       )}
       {support === "no" && isSecureContext && (
         <Alert severity="warning" sx={{ fontSize: "0.8rem" }}>
-          WebGPU is not available in this browser. Photos will be processed on your own
-          hardware only via API mode.
+          {t("webgpu.unsupported")}
         </Alert>
       )}
       {support === "yes" && (
         <Alert severity="info" sx={{ fontSize: "0.8rem" }}>
-          WebGPU available. Inference runs entirely in this browser — no data leaves your
-          device.
+          {t("webgpu.available")}
         </Alert>
       )}
 
@@ -157,25 +161,19 @@ export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) 
           {info?.name ?? modelId}
         </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-          Status: {
-            modelCached
-              ? `Downloaded (${formatBytes(modelCached.bytes)} cached)`
-              : modelStatus?.bytes > 0
-                ? `Partially downloaded (${formatBytes(modelStatus.bytes)} of required files) — re-download to complete`
-                : "Not downloaded"
-          }
+          {t("webgpu.status")}: {statusText}
         </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-          Cache location: this browser (Cache API + IndexedDB)
+          {t("webgpu.cacheLocation")}
         </Typography>
       </Box>
 
       <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
         <Button variant="outlined" size="small" onClick={() => setDialogOpen(true)}>
-          Manage models
+          {t("webgpu.manageModels")}
         </Button>
         <Button variant="outlined" size="small" onClick={() => setConfirmClearOpen(true)}>
-          Clear cache
+          {t("webgpu.clearCache")}
         </Button>
       </Box>
 
@@ -210,17 +208,16 @@ export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) 
       />
 
       <Dialog open={confirmClearOpen} onClose={() => setConfirmClearOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Clear model cache?</DialogTitle>
+        <DialogTitle>{t("webgpu.clearTitle")}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary">
-            This deletes all downloaded WebGPU model files from this browser. They will be
-            re-downloaded the next time they are needed.
+            {t("webgpu.clearBody")}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmClearOpen(false)}>Cancel</Button>
+          <Button onClick={() => setConfirmClearOpen(false)}>{t("common.cancel")}</Button>
           <Button variant="contained" color="error" onClick={handleClear} disabled={clearing}>
-            {clearing ? "Clearing..." : "Clear"}
+            {clearing ? t("webgpu.clearing") : t("webgpu.clear")}
           </Button>
         </DialogActions>
       </Dialog>

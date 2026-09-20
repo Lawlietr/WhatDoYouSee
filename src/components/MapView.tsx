@@ -5,6 +5,7 @@ import { useSyncExternalStore } from "react";
 import { Box, Button, Typography } from "@mui/material";
 import { Map as MapIcon, SatelliteAlt } from "@mui/icons-material";
 import type { MapLayer } from "./leaflet-map";
+import { useI18n } from "../hooks/useI18n";
 
 const emptySubscribe = () => () => {};
 
@@ -16,6 +17,7 @@ interface MapViewProps {
 type LeafletMapEl = ComponentType<{ lat: number; lon: number; layer: MapLayer }>;
 
 export function MapView({ lat, lon }: MapViewProps) {
+  const { t } = useI18n();
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [layer, setLayer] = useState<MapLayer>("street");
   const [LeafletMap, setLeafletMap] = useState<LeafletMapEl | null>(null);
@@ -48,7 +50,7 @@ export function MapView({ lat, lon }: MapViewProps) {
       >
         <MapIcon sx={{ fontSize: 28 }} />
         <Typography variant="body2">
-          No GPS data in this photo, so the location can’t be shown on a map.
+          {t("map.noGps")}
         </Typography>
       </Box>
     );
@@ -80,7 +82,7 @@ export function MapView({ lat, lon }: MapViewProps) {
           onClick={() => setLayer("street")}
           sx={{ color: "text.primary" }}
         >
-          Street
+          {t("map.street")}
         </Button>
         <Button
           size="small"
@@ -89,7 +91,7 @@ export function MapView({ lat, lon }: MapViewProps) {
           onClick={() => setLayer("satellite")}
           sx={{ color: "text.primary" }}
         >
-          Satellite
+          {t("map.satellite")}
         </Button>
       </Box>
     </Box>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Box, Collapse, IconButton, Typography } from "@mui/material";
 import { ExpandMore, ExpandLess } from "@mui/icons-material";
 import type { EXIFData } from "../lib/types";
+import { useI18n } from "../hooks/useI18n";
 
 interface EXIFDisplayProps {
   exif: EXIFData | null;
@@ -23,6 +24,7 @@ function formatCreateDate(value: string | undefined): string | null {
 }
 
 export function EXIFDisplay({ exif }: EXIFDisplayProps) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
 
   const hasData =
@@ -36,7 +38,7 @@ export function EXIFDisplay({ exif }: EXIFDisplayProps) {
   if (!hasData) {
     return (
       <Typography variant="body2" color="text.disabled">
-        No EXIF metadata found in this photo.
+        {t("exif.none")}
       </Typography>
     );
   }
@@ -45,15 +47,15 @@ export function EXIFDisplay({ exif }: EXIFDisplayProps) {
   const cameraText = [exif.make, exif.model].filter(Boolean).join(" ");
 
   const rows: Array<{ label: string; value: string | null }> = [
-    { label: "Taken", value: dateText },
+    { label: t("exif.taken"), value: dateText },
     {
-      label: "Location",
+      label: t("exif.location"),
       value:
         exif.latitude != null && exif.longitude != null
           ? `${exif.latitude.toFixed(5)}, ${exif.longitude.toFixed(5)}`
           : null,
     },
-    { label: "Camera", value: cameraText || null },
+    { label: t("exif.camera"), value: cameraText || null },
   ].filter((row) => row.value != null) as Array<{ label: string; value: string }>;
 
   return (
@@ -74,13 +76,13 @@ export function EXIFDisplay({ exif }: EXIFDisplayProps) {
         }}
       >
         <Typography variant="subtitle2" sx={{ letterSpacing: 0.3 }}>
-          Photo metadata
+          {t("exif.title")}
         </Typography>
         <IconButton
           size="small"
           onClick={() => setOpen(!open)}
           aria-expanded={open}
-          aria-label={open ? "Collapse metadata" : "Expand metadata"}
+          aria-label={open ? t("exif.collapse") : t("exif.expand")}
         >
           {open ? <ExpandLess /> : <ExpandMore />}
         </IconButton>

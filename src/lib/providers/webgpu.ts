@@ -6,8 +6,9 @@ import type {
   AnalysisResponse,
   ProviderConfig,
 } from "../types";
-import { PRIVACY_ANALYSIS_SYSTEM_PROMPT, buildUserPrompt } from "./system-prompt";
+import { getSystemPrompt, buildUserPrompt } from "./system-prompt";
 import { parseAnalysisResilient } from "./utils";
+import { getMessages, interpolate } from "../i18n/translations";
 import { getModelInfo } from "../model-catalog";
 import { cachedModelState } from "../model-cache";
 import { DEFAULT_WEBGPU_MODEL } from "./defaults";
@@ -51,15 +52,13 @@ interface VlPipeline {
 
 const pipelines = new Map<string, Promise<VlPipeline>>();
 
-async function loadPipeline(modelId: string): Promise<VlPipeline> {
+async function loadPipeline(modelId: string, language: string): Promise<VlPipeline> {
   const existing = pipelines.get(modelId);
   if (existing) return existing;
   const promise = (async () => {
     const status = await cachedModelState(modelId);
     if (!status.cached) {
-      throw new Error(
-        `Model "${modelId}" is not downloaded. Models are never downloaded automatically — open Settings → WebGPU → "Manage models" and download it first.`,
-      );
+      throw new Error(interpolate(getMessages(language)["webgpu.errNotCached"], { model: modelId }));
     }
     const { AutoModelForImageTextToText, AutoProcessor, env } = await loadTransformers();
     env.allowLocalModels = false;
@@ -111,17 +110,18 @@ async function loadImage(file: Blob): Promise<RawImageType> {
 }
 
 async function run(modelId: string, file: Blob, request: AnalysisRequest): Promise<string> {
+  const language = request.language;
   const [pipeline, image] = await Promise.all([
-    loadPipeline(modelId),
+    loadPipeline(modelId, language),
     loadImage(file),
   ]);
   const messages: VlMessage[] = [
-    { role: "system", content: PRIVACY_ANALYSIS_SYSTEM_PROMPT },
+    { role: "system", content: getSystemPrompt(language) },
     {
       role: "user",
       content: [
         { type: "image" },
-        { type: "text", text: buildUserPrompt(request.exif ?? {}) },
+        { type: "text", text: buildUserPrompt(request.exif ?? {}, language) },
       ],
     },
   ];
@@ -145,7 +145,7 @@ async function run(modelId: string, file: Blob, request: AnalysisRequest): Promi
     skip_special_tokens: true,
   })[0];
   if (typeof text !== "string" || text.length === 0) {
-    throw new Error("The model returned an empty response");
+    throw new Error(getMessages(language)["webgpu.errNoOutput"]);
   }
   return text;
 }

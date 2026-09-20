@@ -2,25 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { Box, Typography } from "@mui/material";
+import type { Messages } from "../lib/i18n/translations";
+import { useI18n } from "../hooks/useI18n";
 
-const MESSAGES = [
-  "Analyzing photo metadata...",
-  "Extracting location data...",
-  "Detecting objects and patterns...",
-  "Reviewing background details...",
-  "Inferring personal information...",
-  "Compiling findings...",
+const MESSAGE_KEYS: Array<keyof Messages> = [
+  "loading.1",
+  "loading.2",
+  "loading.3",
+  "loading.4",
+  "loading.5",
+  "loading.6",
 ];
 
 const DOT_COLORS = ["#4285f4", "#34a853", "#fbbc05", "#ea4335"];
 const ROTATE_MS = 2500;
 
 export function LoadingAnimation() {
+  const { t } = useI18n();
   const [messageIndex, setMessageIndex] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(
-      () => setMessageIndex((i) => (i + 1) % MESSAGES.length),
+      () => setMessageIndex((i) => (i + 1) % MESSAGE_KEYS.length),
       ROTATE_MS
     );
     return () => clearInterval(timer);
@@ -54,7 +57,7 @@ export function LoadingAnimation() {
         ))}
       </Box>
       <Typography variant="body2" color="text.secondary">
-        {MESSAGES[messageIndex]}
+        {t(MESSAGE_KEYS[messageIndex])}
       </Typography>
     </Box>
   );

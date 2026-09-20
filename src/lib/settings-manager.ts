@@ -5,13 +5,14 @@ import { WEBGPU_MODELS } from "./model-catalog";
 const STORAGE_KEY = "what-do-you-see:settings";
 const OLD_DEFAULT_WEBGPU_MODEL = "LiquidAI/LFM2.5-VL-3B-ONNX";
 const DEFAULT_MIGRATION_KEY = "what-do-you-see:migrated-default-webgpu-450m";
+const LANGUAGE_MIGRATION_KEY = "what-do-you-see:migrated-language-zhtw";
 
 export function defaultSettings(): AppSettings {
   return {
     inferenceMode: "webgpu",
     activeProvider: "llama-server",
     providerConfigs: defaultProviderConfigs(),
-    language: "en",
+    language: "zh-TW",
     webgpuModelId: DEFAULT_WEBGPU_MODEL,
   };
 }
@@ -36,6 +37,12 @@ export function loadSettings(): AppSettings {
         merged.webgpuModelId = DEFAULT_WEBGPU_MODEL;
       }
       window.localStorage.setItem(DEFAULT_MIGRATION_KEY, "1");
+    }
+    if (!window.localStorage.getItem(LANGUAGE_MIGRATION_KEY)) {
+      if (merged.language === "en") {
+        merged.language = "zh-TW";
+      }
+      window.localStorage.setItem(LANGUAGE_MIGRATION_KEY, "1");
     }
     return merged;
   } catch {

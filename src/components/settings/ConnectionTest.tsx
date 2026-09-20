@@ -3,6 +3,8 @@
 import { useCallback, useState } from "react";
 import { Alert, Box, Button, CircularProgress, Typography } from "@mui/material";
 import type { AIProvider, ProviderConfig } from "../../lib/types";
+import type { Messages } from "../../lib/i18n/translations";
+import { useI18n } from "../../hooks/useI18n";
 
 interface ConnectionTestProps {
   provider: AIProvider;
@@ -11,23 +13,21 @@ interface ConnectionTestProps {
 
 type TestStatus = "idle" | "testing" | "success" | "failed";
 
-function failureHint(provider: AIProvider): string {
+type T = (key: keyof Messages, vars?: Record<string, string | number>) => string;
+
+function failureHint(provider: AIProvider, t: T): string {
   switch (provider.id) {
     case "llama-server":
-      return (
-        "Common causes: " +
-        "(1) llama-server must be started with a --cors-origins flag — without it, browsers block cross-origin requests (restart it with --cors-origins '*'). " +
-        "(2) The server is unreachable from this browser (different network, firewall, or wrong address). " +
-        "(3) This page is served over HTTPS but the server is HTTP (mixed content) — localhost URLs are the only allowed exception."
-      );
+      return t("conn.hintLlama");
     case "webgpu":
-      return "This browser does not expose the WebGPU API. Try a recent Chrome or Edge.";
+      return t("conn.hintWebgpu");
     default:
-      return "Check the URL and credentials, then try again.";
+      return t("conn.hintDefault");
   }
 }
 
 export function ConnectionTest({ provider, config }: ConnectionTestProps) {
+  const { t } = useI18n();
   const [status, setStatus] = useState<TestStatus>("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -40,17 +40,17 @@ export function ConnectionTest({ provider, config }: ConnectionTestProps) {
         setStatus("success");
       } else {
         setStatus("failed");
-        setError(failureHint(provider));
+        setError(failureHint(provider, t));
       }
     } catch (e) {
       setStatus("failed");
       setError(
-        (e instanceof Error ? e.message : "Connection failed") +
+        (e instanceof Error ? e.message : t("conn.failed")) +
           "\n" +
-          failureHint(provider)
+          failureHint(provider, t)
       );
     }
-  }, [provider, config]);
+  }, [provider, config, t]);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -66,11 +66,11 @@ export function ConnectionTest({ provider, config }: ConnectionTestProps) {
         disabled={status === "testing"}
         sx={{ alignSelf: "flex-start" }}
       >
-        {status === "testing" ? "Testing..." : "Test connection"}
+        {status === "testing" ? t("conn.testing") : t("conn.test")}
       </Button>
       {status === "success" && (
         <Alert severity="success" sx={{ fontSize: "0.8rem" }}>
-          Connected to {provider.name} successfully.
+          {t("conn.success", { name: provider.name })}
         </Alert>
       )}
       {status === "failed" && (
@@ -80,7 +80,7 @@ export function ConnectionTest({ provider, config }: ConnectionTestProps) {
       )}
       {provider.requiresApiKey && (
         <Typography variant="caption" color="text.disabled">
-          API key is stored only in this browser and sent solely to the endpoint above.
+          {t("conn.keyNote")}
         </Typography>
       )}
     </Box>

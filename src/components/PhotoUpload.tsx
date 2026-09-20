@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Button, IconButton, Typography } from "@mui/material";
 import { CloudUpload, PhotoLibrary, Delete } from "@mui/icons-material";
+import { useI18n } from "../hooks/useI18n";
 
 interface PhotoUploadProps {
   onPhotoSelected: (file: File) => void;
@@ -17,6 +18,7 @@ function formatBytes(bytes: number): string {
 }
 
 export function PhotoUpload({ onPhotoSelected, onClear, file }: PhotoUploadProps) {
+  const { t } = useI18n();
   const isControlled = file !== undefined;
   const [dragActive, setDragActive] = useState(false);
   const [internalFile, setInternalFile] = useState<File | null>(null);
@@ -121,9 +123,9 @@ export function PhotoUpload({ onPhotoSelected, onClear, file }: PhotoUploadProps
               startIcon={<PhotoLibrary />}
               onClick={() => inputRef.current?.click()}
             >
-              Change
+              {t("upload.change")}
             </Button>
-            <IconButton size="small" onClick={clear} aria-label="Clear photo">
+            <IconButton size="small" onClick={clear} aria-label={t("upload.clearAria")}>
               <Delete />
             </IconButton>
           </Box>
@@ -164,12 +166,12 @@ export function PhotoUpload({ onPhotoSelected, onClear, file }: PhotoUploadProps
           }}
         >
           <CloudUpload sx={{ fontSize: 56, color: "primary.main" }} />
-          <Typography variant="h6">Upload a photo</Typography>
+          <Typography variant="h6">{t("upload.title")}</Typography>
           <Typography variant="body2" color="text.secondary">
-            Drag & drop an image here, or click to browse
+            {t("upload.hint")}
           </Typography>
           <Typography variant="caption" color="text.disabled">
-            JPEG · PNG · WebP · HEIC
+            {t("upload.formats")}
           </Typography>
         </Box>
       )}

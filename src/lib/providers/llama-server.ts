@@ -1,6 +1,7 @@
 import type { AIProvider, AnalysisRequest, AnalysisResponse, ProviderConfig } from "../types";
-import { PRIVACY_ANALYSIS_SYSTEM_PROMPT, buildUserPrompt } from "./system-prompt";
+import { getSystemPrompt, buildUserPrompt } from "./system-prompt";
 import { fileToDataURL, parseAnalysisResilient } from "./utils";
+import { getMessages } from "../i18n/translations";
 
 const DEFAULT_BASE_URL = "http://localhost:8080/v1";
 
@@ -38,6 +39,7 @@ async function chatCompletion(
   model: string,
   userPrompt: string,
   imageDataUrl: string,
+  language: string,
   apiKey?: string
 ): Promise<string> {
   const url = `${normalizeBaseUrl(baseUrl)}/chat/completions`;
@@ -47,7 +49,7 @@ async function chatCompletion(
     body: JSON.stringify({
       model,
       messages: [
-        { role: "system", content: PRIVACY_ANALYSIS_SYSTEM_PROMPT },
+        { role: "system", content: getSystemPrompt(language) },
         {
           role: "user",
           content: [
@@ -154,7 +156,7 @@ export const llamaServerProvider: AIProvider = {
     if (!model) {
       const models = await fetchAvailableModels(baseUrl, config.apiKey);
       if (models.length === 0) {
-        throw new Error("No models loaded on the llama-server. Start it with -m/-hf or a models preset, or enter the model name in settings.");
+        throw new Error(getMessages(request.language)["llama.noModels"]);
       }
       model = models[0];
     }
@@ -162,8 +164,9 @@ export const llamaServerProvider: AIProvider = {
     const content = await chatCompletion(
       baseUrl,
       model,
-      buildUserPrompt(request.exif),
+      buildUserPrompt(request.exif, request.language),
       imageDataUrl,
+      request.language,
       config.apiKey
     );
     return parseAnalysisResilient(content);

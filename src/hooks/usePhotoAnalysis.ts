@@ -5,6 +5,7 @@ import { parseEXIF } from "../lib/exif";
 import { compressImage } from "../lib/compress";
 import { useProvider } from "./useProvider";
 import { useSettings } from "./useSettings";
+import { useI18n } from "./useI18n";
 import type {
   AnalysisMeta,
   AnalysisResponse,
@@ -40,6 +41,7 @@ const INITIAL: PhotoAnalysisState = {
 export function usePhotoAnalysis() {
   const { provider, config } = useProvider();
   const { settings } = useSettings();
+  const { t } = useI18n();
   const [state, setState] = useState<PhotoAnalysisState>(INITIAL);
 
   const analyze = useCallback(
@@ -75,12 +77,12 @@ export function usePhotoAnalysis() {
         }));
         return response;
       } catch (e) {
-        const message = e instanceof Error ? e.message : "Analysis failed";
+        const message = e instanceof Error ? e.message : t("common.analysisFailed");
         setState((s) => ({ ...s, isAnalyzing: false, stage: "error", error: message }));
         return null;
       }
     },
-    [provider, config, settings.language]
+    [provider, config, settings.language, t]
   );
 
   const reset = useCallback(() => setState(INITIAL), []);
