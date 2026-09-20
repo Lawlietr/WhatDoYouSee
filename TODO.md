@@ -16,11 +16,12 @@
 5. **8.5** `DEPLOY.md` 部署文件（CF Pages / HF Spaces / self-hosted / env vars / troubleshooting）→ `design/phase-8-deployment.md`
 
 ### P2 — 選用 / 有空再做
-6. **8.4** Self-hosted（Dockerfile + docker-compose）→ `design/phase-8-deployment.md`
-7. **7.1 殘留** EXIF PNG/HEIC 格式抽查（JPG 已驗證）→ `design/phase-7-testing.md`
-8. **8.3** HF Static Spaces 部署（替代方案）→ `design/phase-8-deployment.md`
-9. **8.2 選用** GitHub integration 自動部署（CI 須保留 `build:export` 語義）→ `design/phase-8-deployment.md`
-10. **9.1 殘留** 本地工作目錄改名（they-see-your-photo → what-do-you-see）；open-source 時 wrangler project 改名 → `design/license-rename.md`
+6. **歷史側欄** 左側快捷欄（點選展開）：記錄分析過的照片（IndexedDB，上限 100，FIFO），點照片顯示**過往結果**（純回顧、不重新分析），新紀錄置頂、編號最舊=1，收起時顯示 N/100，展開有自己的捲軸；**本項只研究施工細節、不必實作** → `design/history-sidebar.md`
+7. **8.4** Self-hosted（Dockerfile + docker-compose）→ `design/phase-8-deployment.md`
+8. **7.1 殘留** EXIF PNG/HEIC 格式抽查（JPG 已驗證）→ `design/phase-7-testing.md`
+9. **8.3** HF Static Spaces 部署（替代方案）→ `design/phase-8-deployment.md`
+10. **8.2 選用** GitHub integration 自動部署（CI 須保留 `build:export` 語義）→ `design/phase-8-deployment.md`
+11. **9.1 殘留** 本地工作目錄改名（they-see-your-photo → what-do-you-see）；open-source 時 wrangler project 改名 → `design/license-rename.md`
 
 ### Future — 不排期（未實作）
 - F1 Multi-language / F2 Additional providers (openai, claude, grok, openrouter) / F3 Model management UI / F4 Export & share → `design/future-phases.md`
