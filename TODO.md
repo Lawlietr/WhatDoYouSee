@@ -17,14 +17,15 @@
 
 ### P2 — 選用 / 有空再做
 6. **歷史側欄** 左側快捷欄（點選展開）：記錄分析過的照片（IndexedDB，上限 100，FIFO），點照片顯示**過往結果**（純回顧、不重新分析），新紀錄置頂、編號最舊=1，收起時顯示 N/100，展開有自己的捲軸；**本項只研究施工細節、不必實作** → `design/history-sidebar.md`
-7. **8.4** Self-hosted（Dockerfile + docker-compose）→ `design/phase-8-deployment.md`
-8. **7.1 殘留** EXIF PNG/HEIC 格式抽查（JPG 已驗證）→ `design/phase-7-testing.md`
-9. **8.3** HF Static Spaces 部署（替代方案）→ `design/phase-8-deployment.md`
-10. **8.2 選用** GitHub integration 自動部署（CI 須保留 `build:export` 語義）→ `design/phase-8-deployment.md`
-11. **9.1 殘留** 本地工作目錄改名（they-see-your-photo → what-do-you-see）；open-source 時 wrangler project 改名 → `design/license-rename.md`
+7. **分享按鈕** 將「照片 + 分析結果」存為 PNG 圖片（離屏 capture card、非截全螢幕）；Chromium 走 `showSaveFilePicker` 詢問儲存位置，其他瀏覽器 fallback 預設下載目錄；施工細節 → `design/share-image.md`
+8. **8.4** Self-hosted（Dockerfile + docker-compose）→ `design/phase-8-deployment.md`
+9. **7.1 殘留** EXIF PNG/HEIC 格式抽查（JPG 已驗證）→ `design/phase-7-testing.md`
+10. **8.3** HF Static Spaces 部署（替代方案）→ `design/phase-8-deployment.md`
+11. **8.2 選用** GitHub integration 自動部署（CI 須保留 `build:export` 語義）→ `design/phase-8-deployment.md`
+12. **9.1 殘留** 本地工作目錄改名（they-see-your-photo → what-do-you-see）；open-source 時 wrangler project 改名 → `design/license-rename.md`
 
 ### Future — 不排期（未實作）
-- F1 Multi-language / F2 Additional providers (openai, claude, grok, openrouter) / F3 Model management UI / F4 Export & share → `design/future-phases.md`
+- F1 Multi-language / F2 Additional providers (openai, claude, grok, openrouter) / F3 Model management UI / F4 Export & share（「照片+結果存 PNG」已拆出為 P2 分享按鈕項，剩 PDF / JSON / share link）→ `design/future-phases.md`
 
 ---
 
