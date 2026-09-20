@@ -4,10 +4,7 @@
 > - 實施細節 → `design/` 目錄（每個工作單元一個 .md）
 > - 近期完成歷史 → `git log`（本檔只保留最近 5 條完成工作，置底）
 
-## 待辦工作
-
-### P0 — 發布前必須完成
-（無）
+## 待辦工作（由上至下 = 優先級由高至低）
 
 ### P1 — 品質與文件
 1. **7.3** Performance：lazy-load map、debounce settings、virtual list、object URL preview → `design/phase-7-testing.md`
