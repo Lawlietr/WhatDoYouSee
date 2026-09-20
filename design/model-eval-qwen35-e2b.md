@@ -1,6 +1,6 @@
 # 評估：Qwen3.5-4B-ONNX 與 gemma-4-E2B-it-ONNX（標準版）加入 WebGPU 模型清單
 
-> 日期：2026-09-20。僅評估，未實作。驗證方式：transformers.js 4.2.0 npm tarball dist 內碼 + HF API 檔案清單/size + 兩個 ONNX repo 的 config / preprocessor / chat template。
+> 日期：2026-09-20。評估完成；**實作已定為 P0 最高優先級**（owner 2026-09-20，尚未實作）。驗證方式：transformers.js 4.2.0 npm tarball dist 內碼 + HF API 檔案清單/size + 兩個 ONNX repo 的 config / preprocessor / chat template。
 >
 > 背景：先前已否決 `onnx-community/gemma-4-E2B-it-qat-mobile-ONNX`（mobile QAT 版）——需要 ONNX Runtime ≥1.27.0（當時僅能從 source build）+ `wNa8o8` 自訂 quant schema。本文評估的是**標準版** `onnx-community/gemma-4-E2B-it-ONNX`。
 
