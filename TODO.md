@@ -16,7 +16,7 @@
 5. **7.1 殘留** EXIF PNG/HEIC 格式抽查（JPG 已驗證）→ `design/phase-7-testing.md`
 6. **8.3** HF Static Spaces 部署（替代方案）→ `design/phase-8-deployment.md`
 7. **8.2 選用** GitHub integration 自動部署（CI 須保留 `build:export` 語義）→ `design/phase-8-deployment.md`
-8. **7.6 殘留** [OPTIONAL] 更大的 WebGPU 模型（如 Qwen2.5-VL 2B/4B）；450M 品質不在範圍內 → `design/phase-7-testing.md`
+8. **7.6 殘留** [OPTIONAL] 更大的 WebGPU 模型；450M 品質不在範圍內 → `design/phase-7-testing.md`。**評估已完成（2026-09-20）**：Qwen3.5-4B-ONNX（q4f16 ≈2.8 GiB）可行且推薦，E2B 標準版與 mobile QAT 版均否決 → `design/model-eval-qwen35-e2b.md`
 9. **9.1 殘留** 本地工作目錄改名（they-see-your-photo → what-do-you-see）；open-source 時 wrangler project 改名 → `design/license-rename.md`
 
 ### Future — 不排期（未實作）
