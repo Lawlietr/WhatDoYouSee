@@ -7,7 +7,6 @@ import {
   prefetchModel,
 } from "../lib/model-cache";
 import type { DownloadProgress } from "../lib/types";
-import { useI18n } from "./useI18n";
 
 const EMPTY_PROGRESS: DownloadProgress = {
   loaded: 0,
@@ -17,7 +16,6 @@ const EMPTY_PROGRESS: DownloadProgress = {
 };
 
 export function useModelDownload(modelId: string) {
-  const { t } = useI18n();
   const [isDownloaded, setIsDownloaded] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [progress, setProgress] = useState<DownloadProgress | null>(null);
@@ -48,14 +46,14 @@ export function useModelDownload(modelId: string) {
       setIsDownloaded(true);
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError") {
-        setError(t("common.downloadCancelled"));
+        setError("Download cancelled.");
       } else {
-        setError(e instanceof Error ? e.message : t("common.downloadFailed"));
+        setError(e instanceof Error ? e.message : "Download failed");
       }
     } finally {
       setIsDownloading(false);
     }
-  }, [modelId, t]);
+  }, [modelId]);
 
   const cancel = useCallback(() => {
     abortRef.current?.abort();

@@ -17,13 +17,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "What Do You See?",
   description:
-    "上傳一張照片，看看旁觀者能從中推斷出關於你的什麼。所有分析都在本地執行。",
+    "Upload a photo and see what an observer can infer about you. All analysis runs locally.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="zh-TW"
+      lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

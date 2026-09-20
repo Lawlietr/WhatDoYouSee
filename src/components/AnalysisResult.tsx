@@ -5,7 +5,6 @@ import { Box, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import type { AnalysisResponse } from "../lib/types";
 import { DescriptionView } from "./DescriptionView";
 import { DataTableView } from "./DataTableView";
-import { useI18n } from "../hooks/useI18n";
 
 type Tab = "description" | "data";
 
@@ -14,7 +13,6 @@ interface AnalysisResultProps {
 }
 
 export function AnalysisResult({ result }: AnalysisResultProps) {
-  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("description");
 
   return (
@@ -27,13 +25,13 @@ export function AnalysisResult({ result }: AnalysisResultProps) {
           onChange={(_, value: Tab | null) => {
             if (value) setTab(value);
           }}
-          aria-label={t("result.viewAria")}
+          aria-label="Result view"
         >
-          <ToggleButton value="description" aria-label={t("result.descriptionAria")}>
-            {t("result.description")}
+          <ToggleButton value="description" aria-label="Description view">
+            Description
           </ToggleButton>
-          <ToggleButton value="data" aria-label={t("result.dataAria")}>
-            {t("result.data")}
+          <ToggleButton value="data" aria-label="Data view">
+            Data
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>

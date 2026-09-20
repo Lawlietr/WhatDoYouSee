@@ -13,7 +13,6 @@ import {
 } from "@mui/material";
 import type { ModelInfo } from "../lib/types";
 import { formatBytes } from "../lib/model-cache";
-import { useI18n } from "../hooks/useI18n";
 
 interface ModelDownloadDialogProps {
   open: boolean;
@@ -32,13 +31,12 @@ export function ModelDownloadDialog({
   onConfirm,
   onClose,
 }: ModelDownloadDialogProps) {
-  const { t } = useI18n();
   const [selectedId, setSelectedId] = useState(currentModelId);
   const selected = models.find((m) => m.id === selectedId) ?? models[0];
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{t("dialog.title")}</DialogTitle>
+      <DialogTitle>WebGPU Models</DialogTitle>
       <DialogContent dividers>
         <Box sx={{ mb: 2 }}>
           {models.map((model) => (
@@ -67,12 +65,12 @@ export function ModelDownloadDialog({
                   {model.name}
                   {model.id === currentModelId && (
                     <Typography component="span" variant="caption" sx={{ ml: 1 }} color="primary">
-                      {t("common.active")}
+                      (active)
                     </Typography>
                   )}
                   {cachedIds.includes(model.id) && model.id !== currentModelId && (
                     <Typography component="span" variant="caption" color="success.main" sx={{ ml: 1 }}>
-                      {t("common.downloaded")}
+                      Downloaded
                     </Typography>
                   )}
                 </Typography>
@@ -90,23 +88,26 @@ export function ModelDownloadDialog({
             </Typography>
             <Box>
               <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                {t("dialog.format", { format: selected.format })}
+                Format: {selected.format}
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                {t("dialog.size", { size: formatBytes(selected.sizeBytes) })}
+                Size: {formatBytes(selected.sizeBytes)}
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                {t("dialog.source", { source: selected.source })}
+                Source: {selected.source}
               </Typography>
             </Box>
           </Box>
         )}
         <Typography variant="body2" color="text.secondary">
-          {t("dialog.privacy", { source: selected?.source ?? "Hugging Face" })}
+          Privacy notice: the model is downloaded from {selected?.source ?? "Hugging Face"} and
+          cached in your browser&apos;s local storage (Cache API). It never leaves your device.
+          Photos analyzed with it are processed entirely on your hardware — no image data is
+          sent anywhere.
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t("common.cancel")}</Button>
+        <Button onClick={onClose}>Cancel</Button>
         {selected && (
           <Button
             variant="contained"
@@ -117,10 +118,10 @@ export function ModelDownloadDialog({
             }
           >
             {selected.id === currentModelId && cachedIds.includes(selected.id)
-              ? t("common.done")
+              ? "Done"
               : cachedIds.includes(selected.id)
-                ? t("webgpu.useModel")
-                : t("webgpu.download", { size: formatBytes(selected.sizeBytes) })}
+                ? "Use this model"
+                : `Download (${formatBytes(selected.sizeBytes)})`}
           </Button>
         )}
       </DialogActions>

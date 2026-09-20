@@ -4,7 +4,6 @@ import { Box, Button, CircularProgress, LinearProgress, Typography } from "@mui/
 import { Close as CloseIcon } from "@mui/icons-material";
 import type { DownloadProgress as DownloadProgressState } from "../lib/types";
 import { formatBytes, formatDuration } from "../lib/model-cache";
-import { useI18n } from "../hooks/useI18n";
 
 interface DownloadProgressProps {
   progress: DownloadProgressState;
@@ -19,16 +18,16 @@ export function DownloadProgress({
   onCancel,
   phase = "downloading",
 }: DownloadProgressProps) {
-  const { t } = useI18n();
   if (phase === "loading") {
     return (
       <Box sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <CircularProgress size={18} />
           <Box>
-            <Typography variant="body2">{t("download.loadingTitle", { model: modelLabel })}</Typography>
+            <Typography variant="body2">Loading {modelLabel} into WebGPU…</Typography>
             <Typography variant="caption" color="text.secondary">
-              {t("download.loadingBody")}
+              The first run compiles GPU shaders and loads weights into GPU memory. This can
+              take several minutes — keep this tab open.
             </Typography>
           </Box>
         </Box>
@@ -44,15 +43,15 @@ export function DownloadProgress({
     <Box sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
         <Typography variant="body2" noWrap sx={{ pr: 1 }}>
-          {t("download.title", { model: modelLabel })}
+          Downloading {modelLabel}
         </Typography>
         <Button
           size="small"
           startIcon={<CloseIcon />}
           onClick={onCancel}
-          aria-label={t("download.cancelAria")}
+          aria-label="Cancel download"
         >
-          {t("common.cancel")}
+          Cancel
         </Button>
       </Box>
       <LinearProgress variant="determinate" value={percent * 100} sx={{ mb: 1 }} />
@@ -61,8 +60,8 @@ export function DownloadProgress({
           {Math.round(percent * 100)}% — {formatBytes(loaded)} / {formatBytes(total)}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          {speedBps > 0 ? `${formatBytes(speedBps)}/s` : t("download.starting")}
-          {etaSeconds != null && t("download.eta", { duration: formatDuration(etaSeconds) })}
+          {speedBps > 0 ? `${formatBytes(speedBps)}/s` : "Starting..."}
+          {etaSeconds != null && ` — ${formatDuration(etaSeconds)} left`}
         </Typography>
       </Box>
     </Box>
