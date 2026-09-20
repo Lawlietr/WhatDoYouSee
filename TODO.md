@@ -10,16 +10,17 @@
 1. **7.6** 整合 Qwen3.5-4B-ONNX 進 WebGPU 模型清單（q4f16 ≈2.82 GiB）＋ Thinking switch（預設關）；評估已完成（2026-09-20），實作細節與 smoke test 門檻 → `design/model-eval-qwen35-e2b.md`
 
 ### P1 — 品質與文件
-2. **7.3** Performance：lazy-load map、debounce settings、virtual list、object URL preview → `design/phase-7-testing.md`
-3. **7.4** UI polish：transitions、dark theme 一致性、skeleton、empty state、鍵盤快捷鍵 → `design/phase-7-testing.md`
-4. **8.5** `DEPLOY.md` 部署文件（CF Pages / HF Spaces / self-hosted / env vars / troubleshooting）→ `design/phase-8-deployment.md`
+2. **語言切換** 移到 header 右上角（GitHub icon 左側），下拉選單式；點選即生效（不需 Save），同步移除設定面板的「介面語言」段；施工細節 → `design/i18n.md`
+3. **7.3** Performance：lazy-load map、debounce settings、virtual list、object URL preview → `design/phase-7-testing.md`
+4. **7.4** UI polish：transitions、dark theme 一致性、skeleton、empty state、鍵盤快捷鍵 → `design/phase-7-testing.md`
+5. **8.5** `DEPLOY.md` 部署文件（CF Pages / HF Spaces / self-hosted / env vars / troubleshooting）→ `design/phase-8-deployment.md`
 
 ### P2 — 選用 / 有空再做
-5. **8.4** Self-hosted（Dockerfile + docker-compose）→ `design/phase-8-deployment.md`
-6. **7.1 殘留** EXIF PNG/HEIC 格式抽查（JPG 已驗證）→ `design/phase-7-testing.md`
-7. **8.3** HF Static Spaces 部署（替代方案）→ `design/phase-8-deployment.md`
-8. **8.2 選用** GitHub integration 自動部署（CI 須保留 `build:export` 語義）→ `design/phase-8-deployment.md`
-9. **9.1 殘留** 本地工作目錄改名（they-see-your-photo → what-do-you-see）；open-source 時 wrangler project 改名 → `design/license-rename.md`
+6. **8.4** Self-hosted（Dockerfile + docker-compose）→ `design/phase-8-deployment.md`
+7. **7.1 殘留** EXIF PNG/HEIC 格式抽查（JPG 已驗證）→ `design/phase-7-testing.md`
+8. **8.3** HF Static Spaces 部署（替代方案）→ `design/phase-8-deployment.md`
+9. **8.2 選用** GitHub integration 自動部署（CI 須保留 `build:export` 語義）→ `design/phase-8-deployment.md`
+10. **9.1 殘留** 本地工作目錄改名（they-see-your-photo → what-do-you-see）；open-source 時 wrangler project 改名 → `design/license-rename.md`
 
 ### Future — 不排期（未實作）
 - F1 Multi-language / F2 Additional providers (openai, claude, grok, openrouter) / F3 Model management UI / F4 Export & share → `design/future-phases.md`
