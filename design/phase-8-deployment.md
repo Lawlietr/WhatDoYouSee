@@ -5,7 +5,8 @@
 ## Ordering decision (user)
 Deployment is deferred to a later session. **Local deployment (`npm run build && npm start`) must be fully functional first.** Cloudflare Pages is best-effort afterwards — if it cannot serve normal functionality (e.g. WebGPU on the static build), it is acceptable to **skip** it; self-hosted is the priority. Local dev servers keep the `0.0.0.0` bind convention for LAN testing.
 
-## Step 8.0: Local Production Verification (prerequisite, do first) — 待辦
+## Step 8.0: Local Production Verification — 已從 TODO 移除 (2026-09)
+功能驗證已透過部署站（wdus/wdustesting 均經 owner 實際驗證 WebGPU + API mode）覆蓋，本地 LAN 驗證視為冗餘。以下為原本的驗證清單，僅供參考：
 - `npm run build && npm start -p 3103 -H 0.0.0.0` → verify all features over LAN: WebGPU (via `scripts/https-test-server.mjs` → `https://<lan-ip>:3443`), API mode to user's llama-server, upload → analysis → map → settings round-trip
 - Verify asset integrity after rebuild (all `/_next/static/chunks/*.js` must return 200 — see the build:export-vs-next-start pitfall in LOCAL-TEST-NOTES.md)
 

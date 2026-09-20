@@ -6,24 +6,22 @@
 
 ## 待辦工作
 
-### P0 — 發布前必須完成（owner 指定順序：先本地、後部署）
-1. **8.0** 本地生產驗證：`npm run build && npm start` 後經 LAN 全功能驗證（WebGPU / API mode / 上傳→分析→地圖→設定 round-trip）→ `design/phase-8-deployment.md`
-2. **7.2** Error handling：六項錯誤路徑（network / 下載失敗 / WebGPU 不支援 / EXIF 失敗 / 格式無效 / backend 不可達）→ `design/phase-7-testing.md`
-3. **8.1** 靜態導出本地測試：`npx serve out` 驗證 WebGPU-only 功能集 → `design/phase-8-deployment.md`
-4. **8.4** Self-hosted（Dockerfile + docker-compose）→ `design/phase-8-deployment.md`
+### P0 — 發布前必須完成
+1. **8.1** 靜態導出本地測試：`npx serve out` 驗證 WebGPU-only 功能集 → `design/phase-8-deployment.md`
 
 ### P1 — 品質與文件
-5. **7.3** Performance：lazy-load map、debounce settings、virtual list、object URL preview → `design/phase-7-testing.md`
-6. **7.4** UI polish：transitions、dark theme 一致性、skeleton、empty state、鍵盤快捷鍵 → `design/phase-7-testing.md`
-7. **8.5** `DEPLOY.md` 部署文件（CF Pages / HF Spaces / self-hosted / env vars / troubleshooting）→ `design/phase-8-deployment.md`
+2. **7.3** Performance：lazy-load map、debounce settings、virtual list、object URL preview → `design/phase-7-testing.md`
+3. **7.4** UI polish：transitions、dark theme 一致性、skeleton、empty state、鍵盤快捷鍵 → `design/phase-7-testing.md`
+4. **8.5** `DEPLOY.md` 部署文件（CF Pages / HF Spaces / self-hosted / env vars / troubleshooting）→ `design/phase-8-deployment.md`
 
 ### P2 — 選用 / 有空再做
-8. **7.1 殘留** EXIF PNG/HEIC 格式抽查（JPG 已驗證）→ `design/phase-7-testing.md`
-9. **7.7** [OPTIONAL] Reverse geocoding 地址顯示（owner：只有 marker 也足夠，nice-to-have）→ `design/phase-7-testing.md`
-10. **8.3** HF Static Spaces 部署（替代方案）→ `design/phase-8-deployment.md`
-11. **8.2 選用** GitHub integration 自動部署（CI 須保留 `build:export` 語義）→ `design/phase-8-deployment.md`
-12. **7.6 殘留** [OPTIONAL] 更大的 WebGPU 模型（如 Qwen2.5-VL 2B/4B）；450M 品質不在範圍內 → `design/phase-7-testing.md`
-13. **9.1 殘留** 本地工作目錄改名（they-see-your-photo → what-do-you-see）；open-source 時 wrangler project 改名 → `design/license-rename.md`
+5. **8.4** Self-hosted（Dockerfile + docker-compose）→ `design/phase-8-deployment.md`
+6. **7.1 殘留** EXIF PNG/HEIC 格式抽查（JPG 已驗證）→ `design/phase-7-testing.md`
+7. **7.7** [OPTIONAL] Reverse geocoding 地址顯示（owner：只有 marker 也足夠，nice-to-have）→ `design/phase-7-testing.md`
+8. **8.3** HF Static Spaces 部署（替代方案）→ `design/phase-8-deployment.md`
+9. **8.2 選用** GitHub integration 自動部署（CI 須保留 `build:export` 語義）→ `design/phase-8-deployment.md`
+10. **7.6 殘留** [OPTIONAL] 更大的 WebGPU 模型（如 Qwen2.5-VL 2B/4B）；450M 品質不在範圍內 → `design/phase-7-testing.md`
+11. **9.1 殘留** 本地工作目錄改名（they-see-your-photo → what-do-you-see）；open-source 時 wrangler project 改名 → `design/license-rename.md`
 
 ### Future — 不排期（未實作）
 - F1 Multi-language / F2 Additional providers (openai, claude, grok, openrouter) / F3 Model management UI / F4 Export & share → `design/future-phases.md`

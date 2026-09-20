@@ -18,7 +18,8 @@
 - Test map display with/without GPS data (user-verified: GPS photo shows marker at correct location on 450M run; no-GPS dashed fallback verified in E2E)
 - Test mobile responsive layout (user, 2026-09: verified on real iPhone + iPad devices)
 
-## Step 7.2: Error Handling (待辦)
+## Step 7.2: Error Handling (已取消 — owner 決定不排期：錯誤路徑難以在無 GPU/受限環境中穩定重現與測試)
+
 - Network errors → user-friendly toast notification
 - Model download failure → retry option
 - WebGPU not supported → clear message + fallback suggestion
