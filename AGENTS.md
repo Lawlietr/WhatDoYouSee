@@ -153,7 +153,7 @@ Testing scope note (owner): 450M WebGPU model quality is out of scope (it exists
 
 1. ~~Example photos are placeholders~~ — **done**: 4 real Pexels photos in `public/examples/` (free Pexels License; credits in `public/examples/CREDITS.md`, also shown under each thumbnail).
 2. **System prompt depth (7.6 done, 2026-09)** — attempt 1 (full rewrite) regressed location analysis and was reverted; attempt 2 keeps the original prompt verbatim and appends a "Go deeper" addendum (per-person, personality, income, brands, culture, relationships, habits) — owner-verified on strong backends (Gemma4-12B / Qwen3.6-35B-VL).
-3. **Reverse geocoding not wired** — `/api/reverse-geocode` exists but the UI never calls it; address display near the map is planned (design/phase-7-testing.md, Step 7.7).
+3. ~~**Reverse geocoding not wired**~~ — **cancelled (2026-09):** `/api/reverse-geocode` remains in the self-hosted build but the UI will not call it; owner decided the address display has little practical value. Implementation details kept in design/phase-7-testing.md (Step 7.7) in case it is revisited.
 4. **WebGPU 450M = prose only** — works (user-verified) but cannot produce the JSON table; 3B or the user's llama-server backend is needed for full structured output.
 5. ~~Deployment deferred~~ — **DEPLOYED (2026-09):** live on Cloudflare Pages; custom domains `https://wdus.avpclub.eu.org` (production) and `https://wdustesting.avpclub.eu.org` (testing) — two SEPARATE Pages projects (`what-do-you-see` / `what-do-you-see-test`) so routine deploys can never touch production. Owner-verified WebGPU (450M) and API mode (Gemma4-12B, thinking model) on the live site; both sites currently serve the same DEV-branch build (2026-09, after the no-silent-download fix). One-command deploy: `node scripts/deploy-pages.mjs` (test) / `--prod` (production, on request) — see design/phase-8-deployment.md.
 
@@ -180,7 +180,7 @@ Testing scope note (owner): 450M WebGPU model quality is out of scope (it exists
 ### API Routes
 
 - `POST /api/analyze` — Unified photo analysis entry point (routes to active provider)
-- `GET /api/reverse-geocode` — Coordinates → address via Nominatim. **Currently not wired to the UI** (map shows a marker only, no address). Plan (design/phase-7-testing.md, Step 7.7): display the resolved address with the map — via this proxy in self-hosted builds, or by calling Nominatim directly from the browser in static exports (user-initiated request, consistent with the privacy policy).
+- `GET /api/reverse-geocode` — Coordinates → address via Nominatim. **Not wired to the UI, and the plan to wire it was cancelled (2026-09, owner: little practical value)** — the route stays available in self-hosted builds; map shows a marker only. Implementation sketch for a future revisit: design/phase-7-testing.md, Step 7.7.
 
 These routes only exist in **self-hosted** builds. They are incompatible with static export (`output: 'export'`) because they read the `Request`; `npm run build:export` temporarily moves `src/app/api` out of the tree during the build (see Build & Run).
 

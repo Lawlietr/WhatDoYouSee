@@ -52,7 +52,7 @@
 - Owner test (2026-09, PASSED): owner ran the deployed attempt 2 on strong backends (Gemma4-12B / Qwen3.6-35B-VL) and confirmed the result meets requirements — location analysis intact, deeper categories working, output concise.
 - Note: 450M is out of quality scope (owner 2026-09: it exists only to prove WebGPU works; prose-only output is expected). Bigger WebGPU models (e.g. Qwen2.5-VL 2B/4B) are a later OPTIONAL add. Prompt iterations are judged on strong backends (Qwen3.6-35B-VL / Gemma4-12B).
 
-## Step 7.7: [OPTIONAL] Reverse geocoding (map address display) — nice-to-have, not required
+## Step 7.7: [OPTIONAL] Reverse geocoding (map address display) — 已取消 (2026-09, owner 評估後認為實用價值不高；實作細節保留於此供未來參考)
 
 - Decision (owner, 2026-09): the map marker alone is considered sufficient; this is a **nice-to-have**, not a launch requirement. Implement only if time permits or a user asks for it.
 - Current state: `GET /api/reverse-geocode` (Nominatim) exists in Phase 2 but the UI never calls it.
