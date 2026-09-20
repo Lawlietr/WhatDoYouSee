@@ -38,7 +38,13 @@
 
 **整合時的三個必做點**
 1. **明確傳 per-session dtype**——WebGPU 的 `DEFAULT_DEVICE_DTYPE = fp32`，不指定的話會去解析 bf16 base（decoder 單是 base 就 15.2 GB）。catalog 需帶 `{decoder_model_merged:'q4f16', embed_tokens:'q4f16', vision_encoder:'q4f16'}`（同 LFM2.5 的 per-submodel dtype map 機制）
-2. **thinking 預設開**——chat template 預設進入 reasoning 模式，會把整個 token 預算花在思考上（llama-server 模式的同款問題）。WebGPU 端 `apply_chat_template` 要傳 `chat_template_kwargs: { enable_thinking: false }`——與 `src/lib/providers/llama-server.ts` 現行處理一致
+2. **thinking 預設開 → 做成使用者切換，預設關（owner 需求 2026-09-20）**——Qwen3.5-4B 的 chat template 原生支援 `enable_thinking` Jinja 變數（已驗證模板原文）：
+   - `enable_thinking: false` → 模板輸出空的 `\n\n`（即空思考區塊），模型直接回答
+   - 未定義或 `true` → 模型先思考再回答
+   - 轉發路徑已驗證（tfjs 4.2.0 dist）：`processor.apply_chat_template` 原樣透傳 options → `tokenizer.apply_chat_template` 把所有非保留 options 以 `...kwargs` 展開進 Jinja render——所以 WebGPU 端直接傳**頂層** `enable_thinking`（注意：不是 llama-server/OpenAI API 的 `chat_template_kwargs` 包裝格式；`llama-server.ts` 用 `chat_template_kwargs` 是因為那是 OpenAI chat API 的欄位）
+   - 實作草圖（`webgpu.ts`）：`apply_chat_template(messages, { add_generation_prompt: true, enable_thinking: request.enableThinking ?? false })`；LFM2.5-VL 等無此變數的模板會忽略多餘變數，三個模型共用同一行沒問題
+   - 開啟 thinking 時輸出端要剝離 `<think>...</think>` 區塊（含 closing tag）再進 `parseAnalysisResilient`
+   - UI：Settings → WebGPU 加「Thinking」switch，**預設關**；存 localStorage（其他 WebGPU 設定同機制）
 3. **下載 filePatterns 要鎖死 q4f16 最小集合**——該 repo 同時包含 q4 / q8 / bf16 base 等多種 dtype 變體（bf16 base decoder 15.2 GB）。`model-catalog.ts` 的 `filePatterns` 必須精確匹配 q4f16 的 7 個 ONNX 檔（含 `_onnx_data(_N)?` shards）+ JSON 檔，`model-cache.ts` 的 HF tree 過濾才會只抓需要的
 
 ## gemma-4-E2B-it-ONNX（onnx-community，標準版）——否決
