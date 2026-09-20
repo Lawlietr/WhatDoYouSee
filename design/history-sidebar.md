@@ -11,6 +11,9 @@
 5. 每查詢一個新照片 → 出現在**最上方**（其餘下移）。
 6. **編號 1–100**：滿 100 筆時，最上 = 100、最下 = 1（即 **1 = 最舊**）。
 7. 快捷欄（展開狀態）有**自己的捲軸**，可上下捲動。
+8. **示範照片也計入**：使用者點選示例照片觸發分析時，同樣入列（owner 裁定）。
+9. **刪除功能**：單筆刪除、多筆（複選）刪除、一鍵全選刪除（owner 裁定）。
+10. **xs（mobile）展開方式：左側 overlay**（owner 裁定，非水平推開）。
 
 ## 現況（2026-09 已驗證的代碼事實）
 
@@ -23,7 +26,7 @@
 ## 儲存設計（IndexedDB）
 
 - **不能用 localStorage**（~5MB 上限，100 張縮圖 + 結果會爆）→ **IndexedDB**。
-- 新 DB `what-do-you-see-history`，store `entries`（keyPath `id`）；wrapper 放 `src/lib/history-store.ts`（`addEntry` / `listEntries` / `count`，沿用 `download-manager.ts` 的 `openDB` 模式）。
+- 新 DB `what-do-you-see-history`，store `entries`（keyPath `id`）；wrapper 放 `src/lib/history-store.ts`（`addEntry` / `listEntries` / `count` / `removeEntry` / `removeEntries` / `clear`，沿用 `download-manager.ts` 的 `openDB` 模式）。
 - Entry 欄位：
   - `id`（`crypto.randomUUID()`）、`createdAt`（epoch ms）
   - `thumbnail`：dataURL，由壓縮後的影像再降尺寸至 ~320px 寬（WebP/JPEG，約 20–40KB/張）
@@ -33,7 +36,7 @@
   - `language`：分析時的 UI 語言（給「以 X 模型分析」caption 與文案用；文字本身已存原樣，不受之後換語言影響）
 - 容量估計：100 筆 ≈ 2–5MB → IDB 容納無壓力。
 - **上限 100**：`addEntry` 後若 count > 100，刪除最舊（FIFO）。
-- **只記成功**的分析；失敗（`stage: "error"`）不寫入。
+- **只記成功**的分析；失敗（`stage: "error"`）不寫入。寫入點是 `usePhotoAnalysis` 成功那一刻；示例照片點選也走同一個 `analyze`（`page.tsx` 的 onExample 回调）→ 同一寫入點自然覆蓋，**不需獨立分支**。
 - 隱私：純瀏覽器本地、零外部請求，符合專案隱私規則（無 analytics、無上傳）。
 
 ## 編號與計數
@@ -54,22 +57,31 @@
 `src/app/page.tsx` 改動：
 - 外層變 flex row：`[HistoryRail | 既有 main 直欄]`
 - **md+**：inline 展開（寬 0 → ~280px，main 內容被推開）
-- **xs（mobile）**：rail 為 ~44px 細條，展開為**左側 overlay**（`position: fixed`、寬 ~280px、有 backdrop）——不擠壓內容；詳見「未決項」3
+- **xs（mobile）**：rail 為 ~44px 細條，展開為**左側 overlay**（`position: fixed`、寬 ~280px、有 backdrop）——不擠壓內容（owner 裁定）
 - 主區域加**檢視狀態**：`viewing = { mode: "current" } | { mode: "history", entry }`
   - 點擊歷史項目 → 以**既有元件**渲染該筆已存資料（`AnalysisResult` / `DataTableView` / `EXIFDisplay` / 有 GPS 時 `MapView`）；**不呼叫 `analyze`、不產生任何模型/網路請求**
   - 回傳路徑：重新上傳照片、或檢視列的「回到目前」按鈕 → 回 `current`
-- i18n：`translations.ts` 加 ~10 組 key（rail aria、展開/收起、空狀態、`count/100` caption、回到目前、時間戳格式、無結構化發現的沿用現有 key）
+- i18n：`translations.ts` 加 ~15 組 key（rail aria、展開/收起、空狀態、`count/100` caption、回到目前、時間戳格式、單筆刪除 aria、刪除模式、刪除所選 N、全部刪除、確認對話框；無結構化發現的沿用現有 key）
+
+### 刪除功能（owner 裁定：單筆 / 多筆 / 全選）
+
+- **單筆**：每列右端小 `DeleteIcon` `IconButton`（常駐顯示、24px）→ **直接刪、不確認**（純回顧資料，風險低；`N/100` 與編號隨 render 自動更新）。
+- **多筆**：面板 header 的「刪除模式」切換鈕（`DeleteSweepIcon`）→ 進入後每列顯示 checkbox、點列切換選取；header 變「取消」＋「刪除所選（N）」（N=0 時 disabled）→ 點擊出確認對話框（MUI `Dialog`）→ `removeEntries(ids)`。
+- **全選**：面板 header「全部刪除」鈕 → 確認對話框（顯示總筆數 N）→ `clear()`。
+- **編號不受影響**：編號是 render 時依位置算的（1=最舊）→ 刪除後自動重算，無需重編號邏輯；FIFO 上限 100 不變（刪出空位後新紀錄照填）。
 
 ## 驗收門檻（給未來實作工作）
 
 - 分析 20 張 → 快捷欄顯示 20/100；第 101 張成功後，最舊自動消失、新在最上、編號仍 1–100。
 - 點歷史項目：DevTools 確認**零**模型/網路請求；顯示的 paras/table 與當時分析逐字相同。
 - 重整頁面後歷史與編號維持。
+- 示例照片：點選示例 → 分析 → 該筆出現在列表最上、編號正確。
+- 單筆刪除（無確認）/ 多筆刪除（刪除模式＋確認框）/ 全部刪除（確認框）皆可用；刪後 `N/100`、編號、列表立即更新。
 - 375px mobile：細條不擠破 header/內容；overlay 展開、點選、關閉皆可用。
 - `tsc --noEmit` 與 `npm run build:export` 通過。
 
-## 未決項（待 owner 拍板，研究階段不自作主張）
+## 裁定（owner，2026-09）
 
-1. **刪除功能**：單筆刪除 / 清空全部要不要？（規格未提，預設：不加，維持純回顧）
-2. **示例照片**算不算？（預設：算——「每查詢一個新照片」含 ExamplePhotos 觸發的分析）
-3. **xs 展開方式**：overlay（本研究建議）還是水平推開內容？
+1. **刪除功能**：加單筆 / 多筆（複選）/ 一鍵全選——細節見「刪除功能」section。
+2. **示例照片**：計入（使用者點選觸發分析時）。
+3. **xs 展開方式**：左側 overlay（本研究建議，獲採用）。
