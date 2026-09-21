@@ -30,10 +30,10 @@
 
 | Commit | 日期 | 內容 |
 |--------|------|------|
+| `b1a21eb` | 2026-09-21 | 修復：model prompt 回滾為英文（LFM2.5 中文指令 → 重複迴圈）→ `design/i18n.md` |
+| `1a67caf` | 2026-09-21 | 修復：Qwen processor 參數順序 (text, image)（"undefined is not iterable"）→ `design/model-eval-qwen35-e2b.md` |
 | `1a1f8a2` | 2026-09-21 | 7.6：Qwen3.5-4B-ONNX（q4f16，3.02 GB）進 WebGPU 模型清單＋ Thinking switch（預設關）→ `design/model-eval-qwen35-e2b.md` |
 | `23ac171` | 2026-09-21 | i18n：介面繁體中文（EN/zh-TW 雙語、預設 zh-TW + 一次性遷移、設定面板語言切換）＋分析提示詞雙語化 → `design/i18n.md` |
 | `143196b` | 2026-09-07 | 7.1：mobile 響應式驗證完成（real iPhone + iPad）；EXIF JPG 驗證完成，PNG/HEIC 待補 |
-| `7b99f3d` | 2026-09-06 | 示例照片改版：新 Pexels 照片 + desktop 直欄優先 / mobile 堆疊佈局 |
-| `e9974ae` | 2026-09-06 | 部署策略：test/prod 雙專案分割、`--branch main` 修正、post-deploy WebGPU 修復記錄 |
 
 
