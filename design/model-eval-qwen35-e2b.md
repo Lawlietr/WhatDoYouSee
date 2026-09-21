@@ -64,5 +64,5 @@
    - q4f16 權重可完整載入（6 GB+ VRAM 獨顯）
    - 圖像推理可出文（4B 應能產出 `{paras, table}` JSON，若失敗記下實際輸出）
    - 首次 shader compile + 權重載入的 `loading` 階段時長（驗證 UI spinner 足夠）
-2. ~~通過後才動 catalog~~ —— **已動（2026-09-21，smoke test 待補跑）**：catalog 條目 sizeBytes = 3,021,458,744（q4f16 7 ONNX 檔 + JSON + chat_template.jinja 精確總和）；`defaults.ts` 維持 450M 預設；UI 顯示序按 smallest→largest = **450M → Qwen3.5-4B（3.02 GB）→ LFM2.5-VL-3B（3.72 GB）**——本文原寫「450M → 3B → Qwen3.5-4B（smallest→largest）」是算錯（Qwen 3.02 GB < 3B 3.72 GB），已按大小序修正；thinking 轉發：`apply_chat_template` 頂層 `enable_thinking`（LFM2.5 模板會忽略），開啟時輸出先剝離 `think...thinker` 區塊
+2. ~~通過後才動 catalog~~ —— **已動（2026-09-21，smoke test 待補跑）**：catalog 條目 sizeBytes = 3,021,458,744（q4f16 7 ONNX 檔 + JSON + chat_template.jinja 精確總和）；`defaults.ts` 維持 450M 預設；UI 顯示序（owner 裁定 2026-09-21）= **450M → 3B → Qwen3.5-4B**（LFM2.5 家族在前、Qwen 最後，非嚴格大小序——Qwen 3.02 GB 其實小於 3B 3.72 GB）；thinking 轉發：`apply_chat_template` 頂層 `enable_thinking`（LFM2.5 模板會忽略），開啟時輸出先剝離 `think...thinker` 區塊
 3. smoke test 不通過或記憶體吃緊 → 回到 3B 上限，Qwen3.5-4B 僅留待 WebGPU 記憶體上限放開後再評估

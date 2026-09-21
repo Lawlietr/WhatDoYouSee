@@ -45,15 +45,6 @@ export const WEBGPU_MODELS: WebGpuModelInfo[] = [
     filePatterns: LFM2_5_VL_FILE_PATTERNS,
   },
   {
-    id: "onnx-community/Qwen3.5-4B-ONNX",
-    name: "Qwen3.5-4B (Q4F16, thinking-capable)",
-    format: "ONNX",
-    sizeBytes: 3_021_458_744,
-    source: "huggingface.co (Hugging Face CDN)",
-    dtype: QWEN3_5_VL_DTYPES,
-    filePatterns: QWEN3_5_VL_FILE_PATTERNS,
-  },
-  {
     id: "LiquidAI/LFM2.5-VL-3B-ONNX",
     name: "LFM2.5-VL-3B (fp16 encoder + Q4 decoder)",
     format: "ONNX",
@@ -61,6 +52,15 @@ export const WEBGPU_MODELS: WebGpuModelInfo[] = [
     source: "huggingface.co (Hugging Face CDN)",
     dtype: LFM2_5_VL_DTYPES,
     filePatterns: LFM2_5_VL_FILE_PATTERNS,
+  },
+  {
+    id: "onnx-community/Qwen3.5-4B-ONNX",
+    name: "Qwen3.5-4B (Q4F16, thinking-capable)",
+    format: "ONNX",
+    sizeBytes: 3_021_458_744,
+    source: "huggingface.co (Hugging Face CDN)",
+    dtype: QWEN3_5_VL_DTYPES,
+    filePatterns: QWEN3_5_VL_FILE_PATTERNS,
   },
 ];
 
