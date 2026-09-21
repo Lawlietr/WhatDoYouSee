@@ -137,7 +137,7 @@ async function loadImage(file: Blob, maxDim?: number): Promise<RawImageType> {
 
 async function run(modelId: string, file: Blob, request: AnalysisRequest): Promise<string> {
   const language = request.language;
-  const promptLanguage = modelId.startsWith("LiquidAI/LFM2.5") ? "en" : language;
+  const promptLanguage = language;
   const qwenMaxDim = modelId.includes("Qwen") ? 1568 : undefined;
   const [pipeline, image] = await Promise.all([
     loadPipeline(modelId, language),

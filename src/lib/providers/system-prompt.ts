@@ -38,7 +38,11 @@ Rules for the deeper layer:
 Remember: output ONLY the JSON object, no extra text.`;
 
 
-export function getSystemPrompt(_language?: string): string {
+export function getSystemPrompt(language?: string): string {
+  if (normalizeLanguage(language ?? "") === "zh-TW") {
+    return PRIVACY_ANALYSIS_SYSTEM_PROMPT +
+      '\n\nImportant: reply in Traditional Chinese (繁體中文). Write the text of every "paras" entry and every "table" value in Traditional Chinese; keep the JSON keys and the JSON structure exactly as specified above.';
+  }
   return PRIVACY_ANALYSIS_SYSTEM_PROMPT;
 }
 
