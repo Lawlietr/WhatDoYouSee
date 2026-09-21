@@ -19,6 +19,22 @@ interface VlMessageContent {
   text?: string;
 }
 
+interface GpuRequestAdapterFn {
+  (options?: { powerPreference?: "low-power" | "high-performance" }): Promise<unknown>;
+}
+let webGpuHighPerfPatched = false;
+function preferHighPerformanceGpu() {
+  if (webGpuHighPerfPatched) return;
+  if (typeof navigator === "undefined") return;
+  const gpu = (navigator as { gpu?: { requestAdapter?: GpuRequestAdapterFn } }).gpu;
+  if (!gpu || typeof gpu.requestAdapter !== "function") return;
+  const original = gpu.requestAdapter.bind(gpu);
+  gpu.requestAdapter = (options) =>
+    original({ powerPreference: "high-performance", ...options });
+  webGpuHighPerfPatched = true;
+}
+preferHighPerformanceGpu();
+
 interface VlMessage {
   role: string;
   content: string | VlMessageContent[];
