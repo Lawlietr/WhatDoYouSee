@@ -1,6 +1,6 @@
 # 評估：Qwen3.5-4B-ONNX 與 gemma-4-E2B-it-ONNX（標準版）加入 WebGPU 模型清單
 
-> 日期：2026-09-20。評估完成；**實作完成（2026-09-21，git log）**——catalog + dtype 鎖定 + filePatterns 鎖定 q4f16 + Thinking switch（預設關）。**瀏覽器 smoke test（下一步第 1 項）尚未執行**。驗證方式：transformers.js 4.2.0 npm tarball dist 內碼 + HF API 檔案清單/size + 兩個 ONNX repo 的 config / preprocessor / chat template。
+> 日期：2026-09-20。評估完成；**實作完成（2026-09-21，git log）**——catalog + dtype 鎖定 + filePatterns 鎖定 q4f16 + Thinking switch（預設關）。**瀏覽器 smoke test 进行中（2026-09-21）**：下載 + 載入通過（owner 回報，速度快）；推理首次失敗，root cause 已定位並修復（見下方「Smoke test 記錄」），待 owner 重測。驗證方式：transformers.js 4.2.0 npm tarball dist 內碼 + HF API 檔案清單/size + 兩個 ONNX repo 的 config / preprocessor / chat template + Node 端 processor 重現。
 >
 > 背景：先前已否決 `onnx-community/gemma-4-E2B-it-qat-mobile-ONNX`（mobile QAT 版）——需要 ONNX Runtime ≥1.27.0（當時僅能從 source build）+ `wNa8o8` 自訂 quant schema。本文評估的是**標準版** `onnx-community/gemma-4-E2B-it-ONNX`。
 
@@ -66,3 +66,17 @@
    - 首次 shader compile + 權重載入的 `loading` 階段時長（驗證 UI spinner 足夠）
 2. ~~通過後才動 catalog~~ —— **已動（2026-09-21，smoke test 待補跑）**：catalog 條目 sizeBytes = 3,021,458,744（q4f16 7 ONNX 檔 + JSON + chat_template.jinja 精確總和）；`defaults.ts` 維持 450M 預設；UI 顯示序（owner 裁定 2026-09-21）= **450M → 3B → Qwen3.5-4B**（LFM2.5 家族在前、Qwen 最後，非嚴格大小序——Qwen 3.02 GB 其實小於 3B 3.72 GB）；thinking 轉發：`apply_chat_template` 頂層 `enable_thinking`（LFM2.5 模板會忽略），開啟時輸出先剝離 `think...thinker` 區塊
 3. smoke test 不通過或記憶體吃緊 → 回到 3B 上限，Qwen3.5-4B 僅留待 WebGPU 記憶體上限放開後再評估
+
+## Smoke test 記錄（2026-09-21）
+
+**失敗現象**：owner 在部署站（Chrome，WebGPU）下載 + 載入 Qwen3.5-4B 都正常，但分析照片時報 `undefined is not iterable (cannot read property Symbol(Symbol.iterator))`。
+
+**診斷過程**（Node 端重現，transformers.node bundle + 同一張 example 照片）：
+- 崩點在 processor 的 image preprocess（base `ImageProcessor.preprocess` 的 `const [srcWidth, srcHeight] = image.size;`），**不是 model forward / mrope / KV-cache**——先前對 `Qwen3_5*` 空殼類別與 mrope 的懷疑全部排除
+- 重現關鍵：`Qwen3VLProcessor`（extends Qwen2VLProcessor）的 `_call` 簽名是 **`(text, images)`——text 在前**；LFM2.5-VL 的 processor 則是 `(images, text)`。原 `webgpu.ts` 對所有模型都用 `processor(image, chatPrompt, ...)` → Qwen 路徑下 **prompt 字串被傳進 image processor** → `"string".size` 為 undefined → 解構 undefined = 該錯誤訊息
+- **修復**（`src/lib/providers/webgpu.ts`）：以 `pipeline.processor.constructor.name` 含 `"Qwen"` 判斷，Qwen 系改 `processor(chatPrompt, image, ...)`；LFM 維持原序
+- **修復驗證**（Node 端）：`processor(prompt, image)` 成功產出 `input_ids [1,1683]`、`pixel_values [6600,1536]`、`image_grid_thw [1,66,100]`（1600×1067 ÷ 16px patch），image_pad token 數 1650 = 66×100÷merge² 完全吻合
+- `image_processor_type: "Qwen2VLImageProcessorFast"` 在 4.2.0 的 dist 中不存在，但 AutoImageProcessor 會 fallback 到非 fast 的 `Qwen2VLImageProcessor`（smart_resize + size 欄位，config 的 `size` 即 min/max_pixels 來源）——非 bug，無須處理
+- `enable_thinking` 轉發驗證（Node 端 Qwen 模板）：`true` → 輸出以 `think\n` 結尾；`false` → 無 tag——thinking switch 路徑正常；LFM2.5-VL 模板無 `enable_thinking` 變數（用的是 `keep_past_thinking`/`preserve_thinking`），多傳的 kwarg 對其渲染零影響（Jinja 未引用變數不改變輸出）
+
+**待補**：owner 重測推理（thinking 開/關）+ 時長回報。

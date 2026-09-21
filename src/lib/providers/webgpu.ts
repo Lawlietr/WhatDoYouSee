@@ -133,9 +133,9 @@ async function run(modelId: string, file: Blob, request: AnalysisRequest): Promi
     add_generation_prompt: true,
     enable_thinking: enableThinking,
   });
-  const inputs = await pipeline.processor(image, chatPrompt, {
-    add_special_tokens: false,
-  });
+  const inputs = pipeline.processor.constructor.name.includes("Qwen")
+    ? await (pipeline.processor as any)(chatPrompt, image, { add_special_tokens: false })
+    : await pipeline.processor(image, chatPrompt, { add_special_tokens: false });
   const outputs = await pipeline.model.generate({
     ...inputs,
     do_sample: false,
