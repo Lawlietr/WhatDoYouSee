@@ -114,6 +114,7 @@ async function loadImage(file: Blob): Promise<RawImageType> {
 
 async function run(modelId: string, file: Blob, request: AnalysisRequest): Promise<string> {
   const language = request.language;
+  const promptLanguage = modelId.startsWith("LiquidAI/LFM2.5") ? "en" : language;
   const [pipeline, image] = await Promise.all([
     loadPipeline(modelId, language),
     loadImage(file),
@@ -124,7 +125,7 @@ async function run(modelId: string, file: Blob, request: AnalysisRequest): Promi
       role: "user",
       content: [
         { type: "image" },
-        { type: "text", text: buildUserPrompt(request.exif ?? {}, language) },
+        { type: "text", text: buildUserPrompt(request.exif ?? {}, promptLanguage) },
       ],
     },
   ];
