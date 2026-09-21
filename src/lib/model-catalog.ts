@@ -4,6 +4,7 @@ import type { ModelInfo } from "./types";
 export interface WebGpuModelInfo extends ModelInfo {
   dtype: Record<string, DataType>;
   filePatterns: string[];
+  hidden?: boolean;
 }
 
 const LFM2_5_VL_DTYPES: Record<string, DataType> = {
@@ -61,8 +62,11 @@ export const WEBGPU_MODELS: WebGpuModelInfo[] = [
     source: "huggingface.co (Hugging Face CDN)",
     dtype: QWEN3_5_VL_DTYPES,
     filePatterns: QWEN3_5_VL_FILE_PATTERNS,
+    hidden: true,
   },
 ];
+
+export const VISIBLE_WEBGPU_MODELS = WEBGPU_MODELS.filter((m) => !m.hidden);
 
 export function getModelInfo(modelId: string): WebGpuModelInfo | undefined {
   return WEBGPU_MODELS.find((m) => m.id === modelId);

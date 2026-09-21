@@ -50,12 +50,13 @@
 
 ## 3. 實測數據（owner，Mac + Brave，WebGPU，同一張 walk.jpg）
 
-| 版本 | Qwen3.5-4B | LFM2.5-450M |
-|------|-----------|-------------|
-| 4.2.0 / ORT 1.26 | **557.1s** | 10.9s |
-| 4.3.0 / ORT 1.31 | **414.2s** | 9.7s |
+| 版本 | Qwen3.5-4B | LFM2.5-VL-3B | LFM2.5-450M |
+|------|-----------|-------------|-------------|
+| 4.2.0 / ORT 1.26 | **557.1s** | **55s（en）/ 82s（zh）** | 10.9s |
+| 4.3.0 / ORT 1.31 | **414.2s** | — | 9.7s |
 
 - ORT 1.31 對 Qwen 快 ~26%，但兩者都不可實用（7–9 分鐘/張）。
+- **LFM2.5-VL-3B 是 WebGPU 的實用主力**：55–82s/張、遠快於 Qwen 4B，中文輸出「及格」（owner 定語，明顯優於 450M）。
 - LFM 450M 在 4.3 無回歸（9.7s，正常）——4.3 升級本身功能上是安全的，唯一問題是 CF 25MiB 部署阻斷。
 - 推論耗時顯示：結果區上方的 caption（`page.tsx` 用 `meta.latencyMs` 渲染 `Analyzed with … in X.Xs`）**本來就有**，不用新加。
 
@@ -67,6 +68,7 @@
 - 本機測試實例（**2026-09-21 晚已清理，皆未運行**）：4.2 實例（worktree `/tmp/wdys-42` + 3104/3444）已**刪除**；4.3 實例（3103/3443）已**關閉但未刪除**（主樹 `.next` 仍是 4.3 build）。要重啟 4.3 測試：現有 `.next` 就是 4.3 build，直接 `npm start -- -p 3103 -H 0.0.0.0` + `node scripts/https-test-server.mjs`（PROXY_TARGET 指向 3103）即可；若要從 source 重建：`git checkout ec6f534` → `npm install`（4.3）→ `npm run build`。注意：任何 `npm run build` 在 DEV（4.2）上會把 `.next` 蓋回 4.2。模型 cache 是 **per-origin**（browser Cache API）：換 port = 換 origin = 模型重下。
 - 4.2 部署狀態：test 站（wdustesting）已 promote 回 4.2 部署 `3baa2595`；production（wdus）一直是 4.2。
 - 4.3 部署嘗試的殘骸：test 站曾有 incomplete deployment `390ddeca`（index.html 新、部分 chunk 404）——已被 promote 覆蓋，無後遺症。
+- **owner 決策（2026-09-21，Qwen WebGPU 去留）：UI 隱藏、不刪除。** Qwen3.5-4B 在 WebGPU 設定（模型下載對話框）中不再顯示，Thinking 開關也一併隱藏（它本就是為 Qwen 加的）——目標：WebGPU 模型選項回到 Qwen 加入前一樣（只剩 450M/3B）。實作：`model-catalog.ts` 加 `hidden` 旗標（Qwen = `hidden: true`，資料與尺寸全保留）＋ `VISIBLE_WEBGPU_MODELS` 供 UI 過濾；`webgpu.ts` 的 Qwen 推論路徑、processor 順序、1568px 縮圖、`enable_thinking` 邏輯全未動，未隱藏前已選定的 Qwen 設定仍會正常推論。要恢復顯示：移除 `hidden: true` + 把 Thinking 開關 JSX 加回 `WebGPUSettings.tsx`（git 歷史可查）。
 
 ## 5. 未來選項（未排期）
 

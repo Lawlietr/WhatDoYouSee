@@ -10,8 +10,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
-  Switch,
   Typography,
 } from "@mui/material";
 import type { DownloadProgress as DownloadProgressState, ModelInfo } from "../../lib/types";
@@ -23,7 +21,7 @@ import {
   prefetchModel,
   type CacheStatus,
 } from "../../lib/model-cache";
-import { WEBGPU_MODELS, getModelInfo } from "../../lib/model-catalog";
+import { VISIBLE_WEBGPU_MODELS, WEBGPU_MODELS, getModelInfo } from "../../lib/model-catalog";
 import { ModelDownloadDialog } from "../ModelDownloadDialog";
 import { DownloadProgress } from "../DownloadProgress";
 import { useI18n } from "../../hooks/useI18n";
@@ -46,8 +44,6 @@ async function computeCacheMap(): Promise<Record<string, CacheStatus>> {
 export function WebGPUSettings({
   modelId,
   onModelChange,
-  enableThinking,
-  onEnableThinkingChange,
 }: WebGPUSettingsProps) {
   const { t } = useI18n();
   const [support, setSupport] = useState<"checking" | "yes" | "no">("checking");
@@ -177,24 +173,6 @@ export function WebGPUSettings({
         </Typography>
       </Box>
 
-      <FormControlLabel
-        control={
-          <Switch
-            size="small"
-            checked={enableThinking}
-            onChange={(e) => onEnableThinkingChange(e.target.checked)}
-          />
-        }
-        label={
-          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-            <Typography variant="body2">{t("webgpu.thinking")}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {t("webgpu.thinkingHelper")}
-            </Typography>
-          </Box>
-        }
-      />
-
       <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
         <Button variant="outlined" size="small" onClick={() => setDialogOpen(true)}>
           {t("webgpu.manageModels")}
@@ -220,7 +198,7 @@ export function WebGPUSettings({
 
       <ModelDownloadDialog
         open={dialogOpen}
-        models={WEBGPU_MODELS}
+        models={VISIBLE_WEBGPU_MODELS}
         currentModelId={modelId}
         cachedIds={completeIds}
         onConfirm={(model) => {
