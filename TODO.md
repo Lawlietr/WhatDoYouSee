@@ -20,6 +20,8 @@
 9. **8.3** HF Static Spaces 部署（替代方案）→ `design/phase-8-deployment.md`
 10. **8.2 選用** GitHub integration 自動部署（CI 須保留 `build:export` 語義）→ `design/phase-8-deployment.md`
 11. **9.1 殘留** 本地工作目錄改名（they-see-your-photo → what-do-you-see）；open-source 時 wrangler project 改名 → `design/license-rename.md`
+12. **UI 標註** 模型清單中 Qwen3.5-4B 標「browser 推論慢（~7–9 min）」，建議 API mode → `design/webgpu-qwen-perf-tfjs43.md`
+13. **4.3 重啟評估** 託管遷 Vercel（或其他無單檔上限平台）後，重啟 transformers.js 4.3 升級＋測 structured output（450M JSON 問題）/streaming → `design/webgpu-qwen-perf-tfjs43.md`
 
 ### Future — 不排期（未實作）
 - F1 Multi-language / F2 Additional providers (openai, claude, grok, openrouter) / F3 Model management UI / F4 Export & share（「照片+結果存 JPEG」已拆出為 P2 分享按鈕項，剩 PDF / JSON / share link）→ `design/future-phases.md`
@@ -30,10 +32,10 @@
 
 | Commit | 日期 | 內容 |
 |--------|------|------|
+| `daed6a8` | 2026-09-21 | Qwen WebGPU 效能診斷＋ transformers.js 4.3 評估：維持 4.2.0（4.3 的 25.6MiB wasm 撞 CF 25MiB 上限），package.json pin 死 4.2.0 → `design/webgpu-qwen-perf-tfjs43.md` |
 | `b1a21eb` | 2026-09-21 | 修復：model prompt 回滾為英文（LFM2.5 中文指令 → 重複迴圈）→ `design/i18n.md` |
 | `1a67caf` | 2026-09-21 | 修復：Qwen processor 參數順序 (text, image)（"undefined is not iterable"）→ `design/model-eval-qwen35-e2b.md` |
 | `1a1f8a2` | 2026-09-21 | 7.6：Qwen3.5-4B-ONNX（q4f16，3.02 GB）進 WebGPU 模型清單＋ Thinking switch（預設關）→ `design/model-eval-qwen35-e2b.md` |
 | `23ac171` | 2026-09-21 | i18n：介面繁體中文（EN/zh-TW 雙語、預設 zh-TW + 一次性遷移、設定面板語言切換）＋分析提示詞雙語化 → `design/i18n.md` |
-| `143196b` | 2026-09-07 | 7.1：mobile 響應式驗證完成（real iPhone + iPad）；EXIF JPG 驗證完成，PNG/HEIC 待補 |
 
 
