@@ -60,7 +60,12 @@ export function usePhotoAnalysis() {
         const compressed = await compressImage(file);
         setState((s) => ({ ...s, stage: "analyzing" }));
         const response = await provider.analyze(
-          { file: compressed, exif, language: settings.language },
+          {
+            file: compressed,
+            exif,
+            language: settings.language,
+            enableThinking: settings.enableThinking,
+          },
           config
         );
         setState((s) => ({
@@ -82,7 +87,7 @@ export function usePhotoAnalysis() {
         return null;
       }
     },
-    [provider, config, settings.language, t]
+    [provider, config, settings.language, settings.enableThinking, t]
   );
 
   const reset = useCallback(() => setState(INITIAL), []);

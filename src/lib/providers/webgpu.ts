@@ -39,7 +39,10 @@ interface VlOutputs {
 
 interface VlProcessor {
   (image: RawImageType, text: string, options: Record<string, unknown>): Promise<VlInputs>;
-  apply_chat_template(messages: VlMessage[], options: { add_generation_prompt: boolean }): string;
+  apply_chat_template(
+    messages: VlMessage[],
+    options: { add_generation_prompt: boolean; enable_thinking?: boolean }
+  ): string;
   batch_decode(input: VlOutputs, options: { skip_special_tokens: boolean }): string[];
 }
 
@@ -125,8 +128,10 @@ async function run(modelId: string, file: Blob, request: AnalysisRequest): Promi
       ],
     },
   ];
+  const enableThinking = request.enableThinking ?? false;
   const chatPrompt = pipeline.processor.apply_chat_template(messages, {
     add_generation_prompt: true,
+    enable_thinking: enableThinking,
   });
   const inputs = await pipeline.processor(image, chatPrompt, {
     add_special_tokens: false,
@@ -141,11 +146,14 @@ async function run(modelId: string, file: Blob, request: AnalysisRequest): Promi
   const outDims = outputs.dims;
   const total = outDims[outDims.length - 1] ?? 0;
   const generated = outputs.slice(null, [inputLength, total]);
-  const text = pipeline.processor.batch_decode(generated, {
+  let text = pipeline.processor.batch_decode(generated, {
     skip_special_tokens: true,
   })[0];
   if (typeof text !== "string" || text.length === 0) {
     throw new Error(getMessages(language)["webgpu.errNoOutput"]);
+  }
+  if (enableThinking) {
+    text = text.replace(/^think[\s\S]*?thinker\s*/i, "");
   }
   return text;
 }

@@ -20,6 +20,20 @@ const LFM2_5_VL_FILE_PATTERNS = [
   "\\.jinja$",
 ];
 
+const QWEN3_5_VL_DTYPES: Record<string, DataType> = {
+  embed_tokens: "q4f16",
+  decoder_model_merged: "q4f16",
+  vision_encoder: "q4f16",
+};
+
+const QWEN3_5_VL_FILE_PATTERNS = [
+  "^onnx/embed_tokens_q4f16\\.onnx(_data(_\\d+)?)?$",
+  "^onnx/vision_encoder_q4f16\\.onnx(_data(_\\d+)?)?$",
+  "^onnx/decoder_model_merged_q4f16\\.onnx(_data(_\\d+)?)?$",
+  "\\.json$",
+  "\\.jinja$",
+];
+
 export const WEBGPU_MODELS: WebGpuModelInfo[] = [
   {
     id: "LiquidAI/LFM2.5-VL-450M-ONNX",
@@ -29,6 +43,15 @@ export const WEBGPU_MODELS: WebGpuModelInfo[] = [
     source: "huggingface.co (Hugging Face CDN)",
     dtype: LFM2_5_VL_DTYPES,
     filePatterns: LFM2_5_VL_FILE_PATTERNS,
+  },
+  {
+    id: "onnx-community/Qwen3.5-4B-ONNX",
+    name: "Qwen3.5-4B (Q4F16, thinking-capable)",
+    format: "ONNX",
+    sizeBytes: 3_021_458_744,
+    source: "huggingface.co (Hugging Face CDN)",
+    dtype: QWEN3_5_VL_DTYPES,
+    filePatterns: QWEN3_5_VL_FILE_PATTERNS,
   },
   {
     id: "LiquidAI/LFM2.5-VL-3B-ONNX",

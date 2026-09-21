@@ -75,6 +75,10 @@ export function SettingsPanel({ open, onClose, settings, onSave }: SettingsPanel
     setDraft((d) => ({ ...d, webgpuModelId: modelId }));
   };
 
+  const setEnableThinking = (enabled: boolean) => {
+    setDraft((d) => ({ ...d, enableThinking: enabled }));
+  };
+
   const handleSave = () => {
     if (draft.inferenceMode === "api" && activeProvider) {
       const error = validateProviderConfig(
@@ -154,7 +158,12 @@ export function SettingsPanel({ open, onClose, settings, onSave }: SettingsPanel
           <Divider />
 
           {draft.inferenceMode === "webgpu" ? (
-            <WebGPUSettings modelId={draft.webgpuModelId} onModelChange={setWebGpuModel} />
+            <WebGPUSettings
+              modelId={draft.webgpuModelId}
+              onModelChange={setWebGpuModel}
+              enableThinking={draft.enableThinking}
+              onEnableThinkingChange={setEnableThinking}
+            />
           ) : (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <ProviderSelector

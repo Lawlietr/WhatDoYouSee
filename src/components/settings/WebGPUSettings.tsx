@@ -10,6 +10,8 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
+  Switch,
   Typography,
 } from "@mui/material";
 import type { DownloadProgress as DownloadProgressState, ModelInfo } from "../../lib/types";
@@ -29,6 +31,8 @@ import { useI18n } from "../../hooks/useI18n";
 interface WebGPUSettingsProps {
   modelId: string;
   onModelChange: (modelId: string) => void;
+  enableThinking: boolean;
+  onEnableThinkingChange: (enabled: boolean) => void;
 }
 
 async function computeCacheMap(): Promise<Record<string, CacheStatus>> {
@@ -39,7 +43,12 @@ async function computeCacheMap(): Promise<Record<string, CacheStatus>> {
   return next;
 }
 
-export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) {
+export function WebGPUSettings({
+  modelId,
+  onModelChange,
+  enableThinking,
+  onEnableThinkingChange,
+}: WebGPUSettingsProps) {
   const { t } = useI18n();
   const [support, setSupport] = useState<"checking" | "yes" | "no">("checking");
   const isSecureContext = typeof window === "undefined" ? true : window.isSecureContext;
@@ -167,6 +176,24 @@ export function WebGPUSettings({ modelId, onModelChange }: WebGPUSettingsProps) 
           {t("webgpu.cacheLocation")}
         </Typography>
       </Box>
+
+      <FormControlLabel
+        control={
+          <Switch
+            size="small"
+            checked={enableThinking}
+            onChange={(e) => onEnableThinkingChange(e.target.checked)}
+          />
+        }
+        label={
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+            <Typography variant="body2">{t("webgpu.thinking")}</Typography>
+            <Typography variant="caption" color="text.secondary">
+              {t("webgpu.thinkingHelper")}
+            </Typography>
+          </Box>
+        }
+      />
 
       <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
         <Button variant="outlined" size="small" onClick={() => setDialogOpen(true)}>

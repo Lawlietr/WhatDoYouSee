@@ -2,6 +2,7 @@ export interface AnalysisRequest {
   file: File | Blob;
   exif?: EXIFData;
   language: string;
+  enableThinking?: boolean;
 }
 
 export interface AnalysisResponse {
@@ -59,6 +60,7 @@ export interface AppSettings {
   providerConfigs: Record<string, ProviderConfig>;
   language: string;
   webgpuModelId: string;
+  enableThinking: boolean;
 }
 
 export interface ModelInfo {

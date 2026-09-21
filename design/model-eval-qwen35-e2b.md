@@ -1,6 +1,6 @@
 # 評估：Qwen3.5-4B-ONNX 與 gemma-4-E2B-it-ONNX（標準版）加入 WebGPU 模型清單
 
-> 日期：2026-09-20。評估完成；**實作已定為 P0 最高優先級**（owner 2026-09-20，尚未實作）。驗證方式：transformers.js 4.2.0 npm tarball dist 內碼 + HF API 檔案清單/size + 兩個 ONNX repo 的 config / preprocessor / chat template。
+> 日期：2026-09-20。評估完成；**實作完成（2026-09-21，git log）**——catalog + dtype 鎖定 + filePatterns 鎖定 q4f16 + Thinking switch（預設關）。**瀏覽器 smoke test（下一步第 1 項）尚未執行**。驗證方式：transformers.js 4.2.0 npm tarball dist 內碼 + HF API 檔案清單/size + 兩個 ONNX repo 的 config / preprocessor / chat template。
 >
 > 背景：先前已否決 `onnx-community/gemma-4-E2B-it-qat-mobile-ONNX`（mobile QAT 版）——需要 ONNX Runtime ≥1.27.0（當時僅能從 source build）+ `wNa8o8` 自訂 quant schema。本文評估的是**標準版** `onnx-community/gemma-4-E2B-it-ONNX`。
 
@@ -64,5 +64,5 @@
    - q4f16 權重可完整載入（6 GB+ VRAM 獨顯）
    - 圖像推理可出文（4B 應能產出 `{paras, table}` JSON，若失敗記下實際輸出）
    - 首次 shader compile + 權重載入的 `loading` 階段時長（驗證 UI spinner 足夠）
-2. 通過後才動 catalog：`model-catalog.ts` 加 `WEBGPU_MODELS` 條目（sizeBytes 用本文精確值）、`defaults.ts` 維持 450M 為預設、UI 顯示序 450M → 3B → Qwen3.5-4B（smallest→largest）
+2. ~~通過後才動 catalog~~ —— **已動（2026-09-21，smoke test 待補跑）**：catalog 條目 sizeBytes = 3,021,458,744（q4f16 7 ONNX 檔 + JSON + chat_template.jinja 精確總和）；`defaults.ts` 維持 450M 預設；UI 顯示序按 smallest→largest = **450M → Qwen3.5-4B（3.02 GB）→ LFM2.5-VL-3B（3.72 GB）**——本文原寫「450M → 3B → Qwen3.5-4B（smallest→largest）」是算錯（Qwen 3.02 GB < 3B 3.72 GB），已按大小序修正；thinking 轉發：`apply_chat_template` 頂層 `enable_thinking`（LFM2.5 模板會忽略），開啟時輸出先剝離 `think...thinker` 區塊
 3. smoke test 不通過或記憶體吃緊 → 回到 3B 上限，Qwen3.5-4B 僅留待 WebGPU 記憶體上限放開後再評估

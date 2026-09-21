@@ -51,6 +51,8 @@ export interface Messages {
   "webgpu.errNoImage": string;
   "webgpu.errInfer": string;
   "webgpu.errNoOutput": string;
+  "webgpu.thinking": string;
+  "webgpu.thinkingHelper": string;
 
   "download.loadingTitle": string;
   "download.loadingBody": string;
@@ -207,6 +209,9 @@ export const translations: Record<Language, Messages> = {
     "webgpu.errNoImage": "No image data available for WebGPU analysis.",
     "webgpu.errInfer": "WebGPU inference failed: {detail}",
     "webgpu.errNoOutput": "WebGPU generate() returned no output.",
+    "webgpu.thinking": "Thinking",
+    "webgpu.thinkingHelper":
+      "Qwen3.5 only — the model reasons before answering (slower, may improve output). Off by default.",
 
     "download.loadingTitle": "Loading {model} into WebGPU…",
     "download.loadingBody":
@@ -366,6 +371,9 @@ export const translations: Record<Language, Messages> = {
     "webgpu.errNoImage": "沒有可用的影像資料可供 WebGPU 分析。",
     "webgpu.errInfer": "WebGPU 推理失敗：{detail}",
     "webgpu.errNoOutput": "WebGPU generate() 未產生任何輸出。",
+    "webgpu.thinking": "思考模式",
+    "webgpu.thinkingHelper":
+      "僅 Qwen3.5 適用——模型先推理再回答（較慢，可能提升輸出品質），預設關閉。",
 
     "download.loadingTitle": "正在將 {model} 載入 WebGPU…",
     "download.loadingBody":

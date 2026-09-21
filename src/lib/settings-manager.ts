@@ -14,6 +14,7 @@ export function defaultSettings(): AppSettings {
     providerConfigs: defaultProviderConfigs(),
     language: "zh-TW",
     webgpuModelId: DEFAULT_WEBGPU_MODEL,
+    enableThinking: false,
   };
 }
 
