@@ -140,7 +140,7 @@ async function run(modelId: string, file: Blob, request: AnalysisRequest): Promi
   const outputs = await pipeline.model.generate({
     ...inputs,
     do_sample: false,
-    max_new_tokens: 3072,
+    max_new_tokens: 1536,
   });
   const dims = inputs.input_ids.dims;
   const inputLength = dims[dims.length - 1] ?? 0;
