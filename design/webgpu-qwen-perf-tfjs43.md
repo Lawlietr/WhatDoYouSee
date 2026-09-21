@@ -64,10 +64,7 @@
 - **owner 決策（2026-09-21）：先用 4.2.0**（維持 CF Pages 部署路徑；Vercel 遷移未拍板）。
 - DEV 分支已回退至 4.2.0，且 package.json **pin 死 `4.2.0`（非 caret）**——caret `^4.2.0` 會讓新 session/新 clone 的 `npm install` 解析到 4.3.0，再撞 CF 上限。
 - 4.3.0 的升級 commit 仍在 git 歷史（`ec6f534`），要重啟升級時 `git revert`/`cherry-pick` 即可，再配合託管平台變更（Vercel 為首選）。
-- 本機測試實例（2026-09-21 仍在跑，log 在 /tmp/）：
-  - 4.3：http://192.168.1.15:3103 / https://192.168.1.15:3443（`/tmp/wdys-3103.log`、`/tmp/wdys-3443.log`）
-  - 4.2：http://192.168.1.15:3104 / https://192.168.1.15:3444（git worktree `/tmp/wdys-42`@fe80d4f；`/tmp/wdys-3104.log`、`/tmp/wdys-3444.log`）
-  - **模型 cache 是 per-origin**（browser Cache API）：換 port = 換 origin = 模型重下。
+- 本機測試實例（**2026-09-21 晚已清理，皆未運行**）：4.2 實例（worktree `/tmp/wdys-42` + 3104/3444）已**刪除**；4.3 實例（3103/3443）已**關閉但未刪除**（主樹 `.next` 仍是 4.3 build）。要重啟 4.3 測試：現有 `.next` 就是 4.3 build，直接 `npm start -- -p 3103 -H 0.0.0.0` + `node scripts/https-test-server.mjs`（PROXY_TARGET 指向 3103）即可；若要從 source 重建：`git checkout ec6f534` → `npm install`（4.3）→ `npm run build`。注意：任何 `npm run build` 在 DEV（4.2）上會把 `.next` 蓋回 4.2。模型 cache 是 **per-origin**（browser Cache API）：換 port = 換 origin = 模型重下。
 - 4.2 部署狀態：test 站（wdustesting）已 promote 回 4.2 部署 `3baa2595`；production（wdus）一直是 4.2。
 - 4.3 部署嘗試的殘骸：test 站曾有 incomplete deployment `390ddeca`（index.html 新、部分 chunk 404）——已被 promote 覆蓋，無後遺症。
 
