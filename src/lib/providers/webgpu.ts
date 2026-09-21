@@ -90,7 +90,7 @@ function loadTransformers(): Promise<TransformersModule> {
   return transformersPromise;
 }
 
-async function loadImage(file: Blob): Promise<RawImageType> {
+async function loadImage(file: Blob, maxDim?: number): Promise<RawImageType> {
   const { RawImage } = await loadTransformers();
   const url = URL.createObjectURL(file);
   const img = new Image();
@@ -100,12 +100,19 @@ async function loadImage(file: Blob): Promise<RawImageType> {
       img.onerror = () => reject(new Error("Failed to load image"));
       img.src = url;
     });
+    let w = img.naturalWidth;
+    let h = img.naturalHeight;
+    if (maxDim && (w > maxDim || h > maxDim)) {
+      const scale = maxDim / Math.max(w, h);
+      w = Math.round(w * scale);
+      h = Math.round(h * scale);
+    }
     const canvas = document.createElement("canvas");
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
+    canvas.width = w;
+    canvas.height = h;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Could not create canvas context");
-    ctx.drawImage(img, 0, 0);
+    ctx.drawImage(img, 0, 0, w, h);
     return await RawImage.fromCanvas(canvas);
   } finally {
     URL.revokeObjectURL(url);
@@ -115,9 +122,10 @@ async function loadImage(file: Blob): Promise<RawImageType> {
 async function run(modelId: string, file: Blob, request: AnalysisRequest): Promise<string> {
   const language = request.language;
   const promptLanguage = modelId.startsWith("LiquidAI/LFM2.5") ? "en" : language;
+  const qwenMaxDim = modelId.includes("Qwen") ? 1568 : undefined;
   const [pipeline, image] = await Promise.all([
     loadPipeline(modelId, language),
-    loadImage(file),
+    loadImage(file, qwenMaxDim),
   ]);
   const messages: VlMessage[] = [
     { role: "system", content: getSystemPrompt(language) },
