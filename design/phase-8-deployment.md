@@ -33,10 +33,14 @@ Deployment is deferred to a later session. **Local deployment (`npm run build &&
 - One-time settings migration: browsers that stored the old default (3B) are migrated to the new default (450M) on first load, gated by a localStorage flag so a later explicit 3B choice is respected
 - No silent model downloads: inference gates on `cachedModelState` and fails fast with a pointer to Settings when the model is not fully cached (`from_pretrained` can no longer fetch on demand); dialog action button driven by download state (Download / Use this model / Done — the current model previously had no download button); partial caches are labelled and re-downloadable
 
-## Step 8.3: HF Static Spaces (Alternative) — 待辦
-- Create HF Static Space repo
-- Upload `/out` contents to repo
-- Verify: `https://huggingface.co/spaces/{username}/they-see-your-photo` (should use the `what-do-you-see` name)
+## Step 8.3: HF Static Spaces (✅ 部署完成 2026-10-02)
+- Space: `lawlietr/what-do-you-see` — https://huggingface.co/spaces/lawlietr/what-do-you-see (public, Static SDK, created via `hf repos create lawlietr/what-do-you-see --type space --sdk static --no-private`)
+- Deployed from DEV-branch build `3b163d1` (`npm run build:export` → 60 files, ~13 MB) via `hf upload lawlietr/what-do-you-see out . --type space`; `hf spaces wait` → RUNNING
+- Serving topology: the Space URL is HF's wrapper page; the app itself is served from `https://lawlietr-what-do-you-see.static.hf.space` inside an iframe. Verified 200: app index, JS chunks, example photos, and the 23 MiB asyncify wasm (HF has no 25 MiB per-file limit — that constraint is Cloudflare Pages only)
+- Space card (`README.md`: `sdk: static`, `app_port: 7860`, `license: agpl-3.0`, AGPL-3.0 + GitHub link) was written separately and uploaded to the Space repo — it is NOT in this git repo
+- Future updates: `npm run build:export && hf upload lawlietr/what-do-you-see out . --type space && hf spaces wait lawlietr/what-do-you-see` (requires `hf` CLI authenticated, `hf auth whoami`)
+- Same limitations as Cloudflare Pages (static only, no API routes); WebGPU + API modes both work
+- Manual deploy only — not part of `scripts/deploy-pages.mjs`; CF test/prod policy does not apply to the Space (no prod gate, deploy freely)
 
 ## Step 8.4: Self-Hosted (Full Functionality) — 待辦
 - `npm run build && npm start` (includes API routes; do NOT use `build:export` here)

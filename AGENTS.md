@@ -158,7 +158,7 @@ Testing scope note (owner): 450M WebGPU model quality is out of scope (it exists
 2. **System prompt depth (7.6 done, 2026-09)** — attempt 1 (full rewrite) regressed location analysis and was reverted; attempt 2 keeps the original prompt verbatim and appends a "Go deeper" addendum (per-person, personality, income, brands, culture, relationships, habits) — owner-verified on strong backends (Gemma4-12B / Qwen3.6-35B-VL).
 3. ~~**Reverse geocoding not wired**~~ — **cancelled (2026-09):** `/api/reverse-geocode` remains in the self-hosted build but the UI will not call it; owner decided the address display has little practical value. Implementation details kept in design/phase-7-testing.md (Step 7.7) in case it is revisited.
 4. **WebGPU 450M = prose only** — works (user-verified) but cannot produce the JSON table; 3B or the user's llama-server backend is needed for full structured output.
-5. ~~Deployment deferred~~ — **DEPLOYED (2026-09):** live on Cloudflare Pages; custom domains `https://wdus.avpclub.eu.org` (production) and `https://wdustesting.avpclub.eu.org` (testing) — two SEPARATE Pages projects (`what-do-you-see` / `what-do-you-see-test`) so routine deploys can never touch production. Owner-verified WebGPU (450M) and API mode (Gemma4-12B, thinking model) on the live site; both sites currently serve the same DEV-branch build (2026-09, after the no-silent-download fix). One-command deploy: `node scripts/deploy-pages.mjs` (test) / `--prod` (production, on request) — see design/phase-8-deployment.md.
+5. ~~Deployment deferred~~ — **DEPLOYED (2026-09):** live on Cloudflare Pages; custom domains `https://wdus.avpclub.eu.org` (production) and `https://wdustesting.avpclub.eu.org` (testing) — two SEPARATE Pages projects (`what-do-you-see` / `what-do-you-see-test`) so routine deploys can never touch production. Owner-verified WebGPU (450M) and API mode (Gemma4-12B, thinking model) on the live site; both sites currently serve the same DEV-branch build (2026-09, after the no-silent-download fix). One-command deploy: `node scripts/deploy-pages.mjs` (test) / `--prod` (production, on request) — see design/phase-8-deployment.md. Also live on HF Static Spaces since 2026-10-02 (`lawlietr/what-do-you-see`, public) — see Deployment → Hugging Face Static Spaces.
 6. **Qwen3.5-4B WebGPU = slow (structural)** — works (owner-verified 2026-09, Mac/Brave) but 7–9 min/photo; LFM2.5-VL-450M (~10 s) is the practical browser model; full Qwen analysis → API mode. UI label for the slowness is a TODO item — details: `design/webgpu-qwen-perf-tfjs43.md`.
 
 ## Development Conventions
@@ -270,14 +270,18 @@ node scripts/deploy-pages.mjs --prod  # PRODUCTION — https://wdus.avpclub.eu.o
 - **Pages deploys must only touch the test site by default** (`node scripts/deploy-pages.mjs`); production (`wdus`) gets `--prod` only on explicit owner request. The script passes `--branch main` to wrangler so deploys from any local branch (e.g. DEV) still produce PRODUCTION deployments of the target project — without it, a non-`main` local branch creates a PREVIEW deployment that the custom domain never serves.
 - GitHub icon in the site header links to the GitHub repo (constant in `src/lib/site.ts`)
 
-### Hugging Face Static Spaces
+### Hugging Face Static Spaces (LIVE)
+- **Live (2026-10-02):** Space `lawlietr/what-do-you-see` — https://huggingface.co/spaces/lawlietr/what-do-you-see (public, Static SDK). The app is served from `https://lawlietr-what-do-you-see.static.hf.space` inside HF's Space frame (the Space URL itself is the HF wrapper page, not the app). Deployed from the DEV-branch build (`3b163d1`); 60 files, ~13 MB.
+- **Deploy (manual, after `npm run build:export`):**
 ```bash
-npm run build:export    # Static export to /out
-# Upload /out contents to HF Static Space repo
+npm run build:export
+hf upload lawlietr/what-do-you-see out . --type space --commit-message "update"
+hf spaces wait lawlietr/what-do-you-see
 ```
-- Free: unlimited
+- Requires `hf` CLI authenticated (`hf auth whoami`). The 23 MiB asyncify wasm (transformers.js 4.2.0) is fine here — HF has NO 25 MiB per-file limit (that's Cloudflare Pages).
+- The Space card (`README.md` with `sdk: static`, `app_port: 7860`, `license: agpl-3.0`) lives in the Space repo on the Hub, NOT in this git repo.
+- Same limitations as Cloudflare Pages (static only, no API routes); WebGPU + API modes both work
 - Good for AI community visibility
-- Same limitations as Cloudflare Pages (static only)
 
 ### Self-Hosted (Full Functionality)
 ```bash
