@@ -32,6 +32,7 @@
 | Commit | 日期 | 內容 |
 |--------|------|------|
 | — | 2026-10-02 | 8.3 完成：HF Static Spaces 部署上線（`lawlietr/what-do-you-see`，public，static SDK）；CF prod（`wdus`）經 owner 要求 `--prod` 同步至 DEV `3b163d1`（bundle MD5 驗證三站一致）→ `AGENTS.md` Deployment |
+| — | 2026-10-02 | 回滾：DEV `3b163d1` 識別異常（owner 測試），三站（CF test / CF prod / HF Space）全部改伺服 main `610c05b`（EN UI、attempt-2 prompt），bundle MD5 驗證三站一致 → `AGENTS.md` Known Gaps #5 |
 | `c49b9f5`＋後續 | 2026-09-21 | LFM 中文輸出定案保留（attempt 3，系統提示詞末尾追加英文指令）；WebGPU UI 隱藏 Qwen3.5-4B＋Thinking 開關（`hidden` 旗標，非刪除）→ `design/i18n.md`、`design/webgpu-qwen-perf-tfjs43.md` |
 | `daed6a8` | 2026-09-21 | Qwen WebGPU 效能診斷＋ transformers.js 4.3 評估：維持 4.2.0（4.3 的 25.6MiB wasm 撞 CF 25MiB 上限），package.json pin 死 4.2.0 → `design/webgpu-qwen-perf-tfjs43.md` |
 | `1a67caf` | 2026-09-21 | 修復：Qwen processor 參數順序 (text, image)（"undefined is not iterable"）→ `design/model-eval-qwen35-e2b.md` |
